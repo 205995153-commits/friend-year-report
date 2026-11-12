@@ -6,7 +6,7 @@
 
 ## 在线体验
 
-网页版已部署到 GitHub Pages：**<https://PAGES_URL/>**
+网页版已部署到 GitHub Pages：**<https://205995153-commits.github.io/friend-year-report/>**
 
 没有聊天记录？打开后点「🎲 用演示数据试试」，内置 45 天 × 780 条示例数据。
 

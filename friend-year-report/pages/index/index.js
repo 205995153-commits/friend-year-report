@@ -19,6 +19,7 @@ Page({
     return {
       title: '来生成你们的好友年报吧 ✨',
       path: '/pages/index/index',
+      imageUrl: '/assets/sharecard.png',
     };
   },
 });

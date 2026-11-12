@@ -41,6 +41,7 @@ Page({
     return {
       title: '来看看「' + r.meName + ' × ' + r.friendName + '」的年度报告 👀',
       path: '/pages/index/index',
+      imageUrl: '/assets/sharecard.png',
     };
   },
 

@@ -1,0 +1,68 @@
+<view class="page">
+  <!-- 第一步：粘贴内容 -->
+  <block wx:if="{{step === 1}}">
+    <view class="card">
+      <view class="section-title"><text class="dot"></text>粘贴聊天记录</view>
+      <view class="muted" style="margin-bottom:16rpx;">
+        支持微信电脑版导出的 JSON / TXT 聊天记录
+      </view>
+      <textarea
+        class="paste-area"
+        placeholder="把聊天记录内容粘贴到这里…"
+        bindinput="onInput"
+        value="{{pasted}}"
+        maxlength="-1"
+      ></textarea>
+      <view class="btn-primary {{!pasted ? 'disabled' : ''}}" bindtap="doParse">解析记录</view>
+    </view>
+
+    <view class="or">—— 或者 ——</view>
+
+    <view class="btn-ghost" bindtap="chooseFile">📎 从微信聊天中选择文件</view>
+
+    <view class="tip">
+      💡 导出方法：微信电脑版 → 打开好友聊天窗口 → 右上角「···」→
+      聊天记录 → 导出（可选择 TXT / JSON），再把文件发到手机微信即可选择导入。
+    </view>
+
+    <view wx:if="{{error}}" class="error">{{error}}</view>
+  </block>
+
+  <!-- 第二步：确认身份 -->
+  <block wx:elif="{{step === 2}}">
+    <view class="card">
+      <view class="section-title"><text class="dot"></text>检测到 {{senderOptions.length}} 位聊天对象</view>
+      <view class="muted" style="margin-bottom:20rpx;">
+        共 {{parsed.msgs.length}} 条消息。请点选哪一位是「我」：
+      </view>
+      <view class="sender-list">
+        <view
+          wx:for="{{senderOptions}}"
+          wx:key="key"
+          class="sender-row {{myKey === item.key ? 'active' : ''}}"
+          data-key="{{item.key}}"
+          bindtap="pickMe"
+        >
+          <view class="radio">{{myKey === item.key ? '●' : '○'}}</view>
+          <view class="sender-info">
+            <view class="sender-label">{{item.label}}</view>
+            <view class="sender-count">{{item.count}} 条消息</view>
+          </view>
+          <view class="role-tag {{myKey === item.key ? 'me' : 'friend'}}">
+            {{myKey === item.key ? '👤 我' : '❤️ TA'}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="section-title"><text class="dot"></text>给双方起个名字</view>
+      <view class="field-label">我的昵称</view>
+      <input class="input-box" placeholder="例如：懒大王" value="{{meName}}" bindinput="onMeName" />
+      <view class="field-label">TA 的昵称</view>
+      <input class="input-box" placeholder="例如：小祺大王" value="{{friendName}}" bindinput="onFriendName" />
+      <view class="btn-primary" bindtap="generate">✨ 生成年度报告</view>
+      <view class="btn-ghost" style="margin-top:20rpx;" bindtap="back">← 重新粘贴</view>
+    </view>
+  </block>
+</view>

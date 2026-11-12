@@ -1,0 +1,51 @@
+<view class="page">
+  <view class="card">
+    <view class="section-title"><text class="dot"></text>关于你们</view>
+
+    <view class="field-label">我的昵称</view>
+    <input class="input-box" placeholder="例如：懒大王" value="{{meName}}" data-f="meName" bindinput="onInput" />
+
+    <view class="field-label">TA 的昵称</view>
+    <input class="input-box" placeholder="例如：小祺大王" value="{{friendName}}" data-f="friendName" bindinput="onInput" />
+
+    <view class="field-label">你们认识多久了？</view>
+    <picker mode="selector" range="{{knownDaysList}}" value="{{knownDaysIndex}}" bindchange="onKnownDays">
+      <view class="picker-box">{{knownDaysList[knownDaysIndex]}} ▾</view>
+    </picker>
+
+    <view class="field-label">最常聊天的时间段</view>
+    <picker mode="selector" range="{{timeList}}" value="{{timeIndex}}" bindchange="onTime">
+      <view class="picker-box">{{timeList[timeIndex]}} ▾</view>
+    </picker>
+
+    <view class="field-label">谁更话痨？</view>
+    <view class="seg">
+      <view class="seg-item {{talkMore === '我' ? 'on' : ''}}" data-v="我" bindtap="onTalk">我</view>
+      <view class="seg-item {{talkMore === 'TA' ? 'on' : ''}}" data-v="TA" bindtap="onTalk">TA</view>
+      <view class="seg-item {{talkMore === '五五开' ? 'on' : ''}}" data-v="五五开" bindtap="onTalk">五五开</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title"><text class="dot"></text>灵魂问答</view>
+
+    <view class="field-label">你们最常聊的话题</view>
+    <input class="input-box" placeholder="例如：今天吃什么" value="{{topic}}" data-f="topic" bindinput="onInput" />
+
+    <view class="field-label">用一个词形容 TA</view>
+    <input class="input-box" placeholder="例如：宝藏 / 话痨 / 靠谱" value="{{word}}" data-f="word" bindinput="onInput" />
+
+    <view class="field-label">最难忘的一件事</view>
+    <textarea
+      class="paste-area"
+      style="min-height:160rpx;"
+      placeholder="写下你们的故事，它会出现在报告里"
+      value="{{memory}}"
+      data-f="memory"
+      bindinput="onInput"
+      maxlength="200"
+    ></textarea>
+
+    <view class="btn-primary" bindtap="generate">✨ 生成年度报告</view>
+  </view>
+</view>

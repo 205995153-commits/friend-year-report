@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>好友年报 · 把聊天记录变成年度报告</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --primary:#ff5f7e; --primary-deep:#e04368; --accent:#ffb347;
+    --ink:#4a2b33; --ink-soft:#96737d;
+  }
+  html, body { min-height:100%; }
+  body {
+    background: linear-gradient(160deg,#ffe8ee 0%,#fff6f4 45%,#fff0e6 100%);
+    background-attachment: fixed;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Microsoft YaHei",sans-serif;
+    color:var(--ink); font-size:15px; line-height:1.6;
+  }
+  .wrap { max-width:460px; margin:0 auto; padding:24px 20px 80px; }
+  .view { display:none; }
+  .view.active { display:block; }
+
+  /* ---------- 通用 ---------- */
+  .card { background:#fff; border-radius:20px; padding:22px; margin-top:16px;
+    box-shadow:0 8px 30px rgba(224,67,104,.09); }
+  .btn {
+    display:block; width:100%; border:none; cursor:pointer; text-align:center;
+    background:linear-gradient(135deg,#ff7a93,#ff5f7e 60%,#f04a70); color:#fff;
+    border-radius:999px; font-size:17px; font-weight:700; padding:13px 0;
+    box-shadow:0 10px 30px rgba(240,74,112,.35); letter-spacing:1px;
+    font-family:inherit; transition:transform .12s ease, opacity .12s ease;
+  }
+  .btn:active { transform:scale(.97); opacity:.88; }
+  .btn.disabled { opacity:.45; box-shadow:none; pointer-events:none; }
+  .btn-ghost {
+    display:block; width:100%; background:#fff; color:var(--primary-deep);
+    border:2px solid rgba(224,67,104,.35); border-radius:999px;
+    font-size:16px; font-weight:600; padding:12px 0; text-align:center;
+    cursor:pointer; font-family:inherit; margin-top:14px;
+  }
+  .input-box {
+    width:100%; background:#fff; border:2px solid #f3dfe4; border-radius:14px;
+    padding:11px 14px; font-size:15px; font-family:inherit; color:var(--ink);
+    margin:6px 0 4px; outline:none;
+  }
+  .input-box:focus { border-color:var(--primary); }
+  textarea.input-box { resize:vertical; min-height:110px; line-height:1.7; }
+  .field-label { font-size:13.5px; color:var(--ink-soft); font-weight:600; margin:14px 0 4px; display:block; }
+  .muted { color:var(--ink-soft); font-size:13px; }
+  .error { margin-top:14px; color:#d64545; font-size:14px; text-align:center; }
+  .tip { background:#fff7e6; border-radius:14px; padding:12px 16px; font-size:12.5px;
+    color:#a0783c; line-height:1.8; margin-top:16px; }
+  .or { text-align:center; color:var(--ink-soft); font-size:13px; margin:16px 0 4px; }
+  .hidden { display:none !important; }
+
+  /* ---------- 首页 ---------- */
+  .hero { padding:34px 6px 22px; text-align:left; }
+  .badge { display:inline-block; background:rgba(255,95,126,.12); color:var(--primary-deep);
+    border-radius:999px; padding:5px 18px; font-size:13px; font-weight:700; margin-bottom:16px; }
+  .hero-title { font-size:34px; font-weight:900; color:#3d2129; line-height:1.25; }
+  .hero-sub { margin-top:12px; font-size:14.5px; color:var(--ink-soft); line-height:1.7; }
+  .hero-deco { margin-top:14px; font-size:26px; letter-spacing:10px; }
+  .mode-card { display:flex; align-items:center; background:#fff; border-radius:20px;
+    padding:20px; margin-top:16px; box-shadow:0 8px 30px rgba(224,67,104,.09);
+    cursor:pointer; transition:transform .12s ease; }
+  .mode-card:active { transform:scale(.98); }
+  .mode-icon { font-size:34px; margin-right:16px; }
+  .mode-body { flex:1; }
+  .mode-title { font-size:17px; font-weight:800; }
+  .mode-desc { font-size:12.5px; color:var(--ink-soft); margin-top:3px; line-height:1.5; }
+  .arrow { font-size:26px; color:#e8c2cc; }
+  .privacy { margin-top:22px; text-align:center; font-size:12px; color:var(--ink-soft); line-height:1.7; }
+
+  /* ---------- 导入 ---------- */
+  .drop-zone {
+    border:2px dashed #f0c4cf; background:#fff8f9; border-radius:16px;
+    padding:22px; text-align:center; cursor:pointer; margin-bottom:12px;
+    transition:background .15s ease;
+  }
+  .drop-zone.drag { background:#ffe9ee; border-color:var(--primary); }
+  .drop-zone .dz-icon { font-size:34px; }
+  .drop-zone .dz-text { font-size:13px; color:var(--ink-soft); margin-top:6px; }
+  .sender-row { display:flex; align-items:center; padding:14px; border-radius:14px;
+    background:#fff8f9; margin-top:10px; border:2px solid transparent; cursor:pointer; }
+  .sender-row.active { border-color:var(--primary); background:#fff0f3; }
+  .radio { color:var(--primary); font-size:20px; margin-right:12px; }
+  .sender-info { flex:1; }
+  .sender-label { font-size:15px; font-weight:700; }
+  .sender-count { font-size:12px; color:var(--ink-soft); }
+  .role-tag { font-size:13px; padding:3px 14px; border-radius:999px; background:#f0f0f0; color:var(--ink-soft); }
+  .role-tag.me { background:rgba(255,95,126,.15); color:var(--primary-deep); }
+
+  /* ---------- 问答 ---------- */
+  select.input-box { appearance:none; -webkit-appearance:none;
+    background:#fff url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23e04368' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center; }
+  .seg { display:flex; gap:8px; margin-top:6px; }
+  .seg-item { flex:1; text-align:center; padding:11px 0; background:#fff8f9;
+    border:2px solid #f3dfe4; border-radius:14px; font-size:14.5px; color:var(--ink-soft); cursor:pointer; }
+  .seg-item.on { background:linear-gradient(135deg,#ff7a93,#ff5f7e); color:#fff;
+    border-color:transparent; font-weight:700; }
+
+  /* ---------- 报告 ---------- */
+  .rep-header { text-align:center; padding:16px 0 10px; }
+  .rep-header .names { font-size:20px; font-weight:900; color:#3d2129; }
+  .rep-header .sub { font-size:12.5px; color:var(--ink-soft); margin-top:4px; }
+  .slides { position:relative; margin-top:10px; }
+  .slide { display:none; background:#fff; border-radius:22px; padding:26px 24px;
+    box-shadow:0 10px 36px rgba(224,67,104,.10); min-height:400px;
+    animation:fadein .35s ease; }
+  .slide.active { display:block; }
+  @keyframes fadein { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:none; } }
+  .slide-title { font-size:20px; font-weight:900; color:#3d2129; margin-bottom:16px; }
+  .cover-slide { text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:420px; }
+  .cover-badge { background:rgba(255,95,126,.12); color:var(--primary-deep);
+    border-radius:999px; padding:5px 18px; font-size:13px; font-weight:700; margin-bottom:20px; }
+  .cover-names { font-size:30px; font-weight:900; color:#3d2129; }
+  .cover-range { margin-top:10px; font-size:13px; color:var(--ink-soft); }
+  .cover-emoji { font-size:60px; margin-top:22px; animation:float 2.6s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  .cover-hint { margin-top:16px; font-size:12px; color:#c9a6af; }
+  .big-grid { display:flex; gap:12px; margin-bottom:14px; }
+  .big-cell { flex:1; background:#fff; border:2px solid #fdeef1; border-radius:16px;
+    padding:18px 0; text-align:center; }
+  .big-num { font-size:34px; font-weight:900; color:var(--primary-deep); }
+  .big-label { margin-top:4px; font-size:12.5px; color:var(--ink-soft); }
+  .ratio-row { display:flex; align-items:center; margin-top:12px; }
+  .ratio-name { width:84px; font-size:13.5px; font-weight:700; }
+  .ratio-bar { flex:1; height:14px; background:#f7eef0; border-radius:999px; overflow:hidden; }
+  .ratio-fill { height:100%; border-radius:999px; }
+  .ratio-fill.me { background:linear-gradient(90deg,#ff9a76,#ff5f7e); }
+  .ratio-fill.friend { background:linear-gradient(90deg,#6fc3ff,#4f8ef7); }
+  .ratio-pct { width:44px; text-align:right; font-size:13.5px; font-weight:800; }
+  .verdict { background:#fff; border:2px solid #fdeef1; border-radius:14px; padding:12px 16px;
+    font-size:13.5px; color:#6b4a55; line-height:1.7; text-align:center; margin-top:14px; }
+  .chart-bars { display:flex; align-items:flex-end; height:190px; gap:3px; }
+  .bar-col { flex:1; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%; }
+  .bar { width:100%; border-radius:5px 5px 0 0; background:linear-gradient(180deg,#ff8fa6,#ff5f7e);
+    position:relative; min-height:3px; }
+  .bar-val { position:absolute; top:-17px; left:50%; transform:translateX(-50%);
+    font-size:9px; color:var(--ink-soft); white-space:nowrap; }
+  .bar-label { margin-top:4px; font-size:9px; color:var(--ink-soft); min-height:13px; }
+  .word-cloud { display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:14px; min-height:200px; padding:14px 0; }
+  .word { color:#5b3a45; font-weight:700; line-height:1.2; }
+  .moment { display:flex; align-items:flex-start; padding:13px 0; border-bottom:1px solid #faf0f2; }
+  .moment:last-child { border-bottom:none; }
+  .moment-icon { font-size:26px; margin-right:14px; }
+  .moment-label { font-size:12px; color:var(--ink-soft); }
+  .moment-text { margin-top:3px; font-size:14.5px; color:var(--ink); font-weight:600; }
+  .story-emoji { font-size:44px; text-align:center; margin-bottom:14px; }
+  .story-text { font-size:15.5px; line-height:1.9; color:var(--ink); text-align:center; }
+  .story-line { width:36px; height:3px; background:#f0c4cf; border-radius:3px; margin:18px auto; }
+  .big-word { font-size:44px; font-weight:900; text-align:center; color:var(--primary-deep); padding:16px 0; }
+  .topic-text { font-size:22px; font-weight:800; color:#3d2129; text-align:center; margin-top:4px; }
+  .award-card { display:flex; align-items:center; background:#fff; border:2px solid #fdeef1;
+    border-radius:16px; padding:15px; margin-top:12px; }
+  .award-icon { font-size:30px; margin-right:14px; }
+  .award-title { font-size:15.5px; font-weight:800; color:#3d2129; }
+  .award-desc { margin-top:3px; font-size:12.5px; color:var(--ink-soft); line-height:1.5; }
+  .verdict-text { font-size:15.5px; line-height:2.1; color:var(--ink); }
+  .slide-actions { margin-top:18px; }
+  .share-btn { display:block; width:100%; background:#fff; color:var(--primary-deep);
+    border:2px solid rgba(224,67,104,.35); border-radius:999px; font-size:16px;
+    font-weight:700; padding:12px 0; text-align:center; cursor:pointer;
+    font-family:inherit; margin-top:14px; }
+  .nav { display:flex; align-items:center; justify-content:space-between; margin-top:16px; }
+  .nav-btn { background:#fff; border:none; border-radius:999px; width:44px; height:44px;
+    font-size:20px; color:var(--primary-deep); cursor:pointer;
+    box-shadow:0 6px 20px rgba(224,67,104,.18); font-family:inherit; }
+  .nav-btn:disabled { opacity:.35; }
+  .dots { display:flex; gap:6px; justify-content:center; }
+  .dot { width:7px; height:7px; border-radius:50%; background:rgba(0,0,0,.15); }
+  .dot.on { background:var(--primary); width:18px; border-radius:999px; transition:width .2s; }
+
+  /* ---------- 海报弹层 ---------- */
+  .modal-mask { position:fixed; inset:0; background:rgba(40,10,20,.72); z-index:100;
+    display:flex; align-items:center; justify-content:center; padding:20px; }
+  .modal { background:#fff; border-radius:22px; padding:20px; width:min(400px,90vw); }
+  .modal img { width:100%; border-radius:16px; display:block; }
+  .modal .m-title { font-size:16px; font-weight:800; text-align:center; margin:12px 0 10px; }
+  .modal .m-actions { display:flex; gap:10px; }
+  .modal .m-actions .btn { flex:1; font-size:15px; padding:11px 0; }
+  .modal .m-close { display:block; width:100%; text-align:center; padding:12px 0 2px;
+    color:var(--ink-soft); font-size:14px; cursor:pointer; background:none; border:none; font-family:inherit; }
+
+  /* ---------- 提示条 ---------- */
+  #toast { position:fixed; left:50%; bottom:60px; transform:translateX(-50%);
+    background:rgba(40,10,20,.85); color:#fff; font-size:13.5px; padding:10px 20px;
+    border-radius:999px; z-index:200; display:none; max-width:80vw; text-align:center; }
+
+  /* ---------- 离屏画布 ---------- */
+  #poster-canvas { position:fixed; left:-9999px; top:0; }
+  footer { text-align:center; margin-top:26px; font-size:11.5px; color:#c9a6af; line-height:1.8; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= 首页 ================= -->
+  <div id="view-home" class="view active">
+    <div class="hero">
+      <span class="badge">✨ 好友年报</span>
+      <div class="hero-title">把聊天记录<br>变成年度报告</div>
+      <div class="hero-sub">谁更话痨？几点最活跃？<br>年度称号又花落谁家？</div>
+      <div class="hero-deco">📊 💬 🌙</div>
+    </div>
+
+    <div class="mode-card" onclick="App.go('import')">
+      <div class="mode-icon">📂</div>
+      <div class="mode-body">
+        <div class="mode-title">导入聊天记录</div>
+        <div class="mode-desc">上传或粘贴微信导出的聊天记录（JSON / TXT），生成真实数据报告</div>
+      </div>
+      <div class="arrow">›</div>
+    </div>
+
+    <div class="mode-card" onclick="App.go('quiz')">
+      <div class="mode-icon">📝</div>
+      <div class="mode-body">
+        <div class="mode-title">手填问答</div>
+        <div class="mode-desc">没有聊天记录？回答几个问题，生成趣味版报告</div>
+      </div>
+      <div class="arrow">›</div>
+    </div>
+
+    <button class="btn-ghost" onclick="App.trySample()">🎲 没有文件？用演示数据试试</button>
+
+    <div class="privacy">🔒 所有分析都在你的浏览器本地完成，<br>聊天内容不会被上传到任何服务器。</div>
+  </div>
+
+  <!-- ================= 导入 ================= -->
+  <div id="view-import" class="view">
+    <div id="import-step1">
+      <div class="card">
+        <div class="slide-title" style="margin-bottom:8px;">导入聊天记录</div>
+        <div class="muted" style="margin-bottom:12px;">支持微信电脑版导出的 JSON / TXT 格式</div>
+        <div class="drop-zone" id="drop-zone">
+          <div class="dz-icon">📥</div>
+          <div class="dz-text">点击选择文件，或把文件拖到这里<br>（也可以直接粘贴到下方输入框）</div>
+          <input type="file" id="file-input" accept=".json,.txt,application/json,text/plain" class="hidden">
+        </div>
+        <textarea class="input-box" id="paste-area" placeholder="把聊天记录内容粘贴到这里…"></textarea>
+        <button class="btn" id="parse-btn" onclick="App.parse()">解析记录</button>
+      </div>
+      <div class="tip">💡 导出方法：微信电脑版 → 打开好友聊天窗口 → 右上角「···」→ 聊天记录 → 导出（TXT / JSON），把文件传到手机或电脑浏览器即可。</div>
+      <div class="error" id="import-error"></div>
+    </div>
+
+    <div id="import-step2" class="hidden">
+      <div class="card">
+        <div class="slide-title" style="margin-bottom:8px;">检测到 <span id="sender-count">2</span> 位聊天对象</div>
+        <div class="muted" id="import-summary"></div>
+        <div id="sender-list"></div>
+      </div>
+      <div class="card">
+        <div class="slide-title" style="margin-bottom:4px;">给双方起个名字</div>
+        <label class="field-label">我的昵称</label>
+        <input class="input-box" id="me-name" placeholder="例如：懒大王">
+        <label class="field-label">TA 的昵称</label>
+        <input class="input-box" id="friend-name" placeholder="例如：小祺大王">
+        <button class="btn" onclick="App.generate()">✨ 生成年度报告</button>
+        <button class="btn-ghost" onclick="App.resetImport()">← 重新导入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 问答 ================= -->
+  <div id="view-quiz" class="view">
+    <div class="card">
+      <div class="slide-title" style="margin-bottom:4px;">关于你们</div>
+      <label class="field-label">我的昵称</label>
+      <input class="input-box" id="q-me" placeholder="例如：懒大王">
+      <label class="field-label">TA 的昵称</label>
+      <input class="input-box" id="q-friend" placeholder="例如：小祺大王">
+      <label class="field-label">你们认识多久了？</label>
+      <select class="input-box" id="q-known">
+        <option>不到一个月</option><option>1-3个月</option><option>半年左右</option>
+        <option>一年左右</option><option>两三年</option><option>三年以上</option><option>十年以上</option>
+      </select>
+      <label class="field-label">最常聊天的时间段</label>
+      <select class="input-box" id="q-time">
+        <option>深夜</option><option>早上</option><option>中午</option>
+        <option>下午</option><option>晚上</option><option>随时</option>
+      </select>
+      <label class="field-label">谁更话痨？</label>
+      <div class="seg" id="q-talk">
+        <div class="seg-item" data-v="我">我</div>
+        <div class="seg-item on" data-v="TA">TA</div>
+        <div class="seg-item" data-v="五五开">五五开</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="slide-title" style="margin-bottom:4px;">灵魂问答</div>
+      <label class="field-label">你们最常聊的话题</label>
+      <input class="input-box" id="q-topic" placeholder="例如：今天吃什么">
+      <label class="field-label">用一个词形容 TA</label>
+      <input class="input-box" id="q-word" placeholder="例如：宝藏 / 话痨 / 靠谱">
+      <label class="field-label">最难忘的一件事</label>
+      <textarea class="input-box" id="q-memory" maxlength="200" placeholder="写下你们的故事，它会出现在报告里"></textarea>
+      <button class="btn" onclick="App.generateQuiz()">✨ 生成年度报告</button>
+    </div>
+  </div>
+
+  <!-- ================= 报告 ================= -->
+  <div id="view-report" class="view">
+    <div class="rep-header">
+      <div class="names" id="rep-names"></div>
+      <div class="sub">左右滑动 · 共 7 页</div>
+    </div>
+    <div class="slides" id="slides"></div>
+    <div class="nav">
+      <button class="nav-btn" id="nav-prev" onclick="App.prev()">‹</button>
+      <div class="dots" id="dots"></div>
+      <button class="nav-btn" id="nav-next" onclick="App.next()">›</button>
+    </div>
+    <button class="btn-ghost" onclick="App.go('home')" style="margin-top:14px;">← 返回首页</button>
+  </div>
+
+  <footer>
+    数据仅本地分析，不上传任何服务器 · 由「好友年报」生成
+  </footer>
+</div>
+
+<!-- ================= 海报弹层 ================= -->
+<div id="poster-modal" class="modal-mask hidden">
+  <div class="modal">
+    <img id="poster-img" alt="好友年报海报">
+    <div class="m-title">分享海报已生成 ✨</div>
+    <div class="m-actions">
+      <button class="btn" onclick="App.downloadPoster()">💾 下载图片</button>
+      <button class="btn" id="share-btn" style="display:none;" onclick="App.sharePoster()">📤 分享</button>
+    </div>
+    <button class="m-close" onclick="App.closePoster()">关闭</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+<canvas id="poster-canvas" width="640" height="1000"></canvas>
+
+<script>
+var module = {exports:{}};
+var require = function(){ return module.exports; };
+// 词典与规则：停用字、表情、高频口头禅、甜蜜用语
+// 全部为静态数据，不依赖任何网络或第三方库
+
+// 单字停用字（用于二元组提取高频词）
+const STOP_CHARS = new Set(
+  (
+    '的了是在我有和就不人都一他她它这那们着没到说要去上会么很再还又也而但或与及并之其可以' +
+    '啊哦嗯呃呀吧呢吗嘛哈咯昂诶嘿哟哇哈哈' +
+    '你我他她它我们你们他们自己什么怎么为什么怎么样知道觉得时候现在今天明天昨天然后所以因为但是' +
+    '一个一下一点有些没有不是就是还是只是不过如果虽然已经这样那样这么那么多少'
+  ).split('')
+);
+
+// 表情符号范围（Unicode）
+const EMOJI_RE =
+  /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{2190}-\u{21FF}]/gu;
+
+// 大笑表达
+const LAUGH_RE = /哈{2,}|hhh+|233+|笑死|笑不活|笑死我了|嘎嘎|鹅鹅鹅|ㅋㅋ|😂|🤣/gi;
+
+// 甜蜜用语
+const LOVE_RE = /爱你|喜欢你|想你|宝贝|宝宝|么么|亲亲|抱抱|晚安|早安|午安|心心|比心|❤|🥰|😘|💕/gi;
+
+// 高频词黑名单（直接剔除的完整词）
+const WORD_BLACKLIST = new Set([
+  '聊天记录', '消息', '图片', '语音', '视频', '表情', '系统', '微信', '撤回',
+  'http', 'https', 'com', 'www', '哈哈', '哈哈哈', '哈哈哈哈',
+]);
+
+// 根据文本提取二元组高频词
+function extractBigrams(texts, topN) {
+  const counter = {};
+  for (let t of texts) {
+    t = String(t || '')
+      .replace(/https?:\/\/\S+/g, ' ')
+      .replace(EMOJI_RE, ' ')
+      .replace(/[^\u4e00-\u9fff]/g, '');
+    const chars = t.split('').filter((c) => c && !STOP_CHARS.has(c));
+    for (let i = 0; i < chars.length - 1; i++) {
+      const w = chars[i] + chars[i + 1];
+      if (WORD_BLACKLIST.has(w)) continue;
+      counter[w] = (counter[w] || 0) + 1;
+    }
+  }
+  return Object.keys(counter)
+    .map((w) => ({ w, n: counter[w] }))
+    .sort((a, b) => b.n - a.n)
+    .slice(0, topN || 18);
+}
+
+module.exports = {
+  STOP_CHARS,
+  EMOJI_RE,
+  LAUGH_RE,
+  LOVE_RE,
+  WORD_BLACKLIST,
+  extractBigrams,
+};
+
+// 好友年报 · 分析引擎
+// 纯 JS 实现，无任何依赖，可同时用于小程序与浏览器预览
+const WORDS = require('./words');
+
+/* ================= 工具函数 ================= */
+function pad(n) {
+  return n < 10 ? '0' + n : '' + n;
+}
+function fmtDate(t) {
+  const d = new Date(t);
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+function fmtTime(t) {
+  const d = new Date(t);
+  return pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function fmtFull(t) {
+  return fmtDate(t) + ' ' + fmtTime(t);
+}
+function isNightHour(h) {
+  return h >= 23 || h <= 5;
+}
+
+/* ================= 输入解析 ================= */
+
+// 尝试解析 JSON（微信电脑版导出格式 / 通用消息数组）
+function tryParseJSON(str) {
+  const s = String(str || '').trim();
+  if (!s) return null;
+  if (s[0] === '[') {
+    try {
+      const v = JSON.parse(s);
+      if (Array.isArray(v)) return v;
+    } catch (e) {}
+  }
+  if (s[0] === '{') {
+    try {
+      const v = JSON.parse(s);
+      if (Array.isArray(v.messages)) return v.messages;
+      if (Array.isArray(v.data)) return v.data;
+      if (Array.isArray(v.list)) return v.list;
+    } catch (e) {}
+  }
+  return null;
+}
+
+// 解析微信导出 TXT（———— 2026-10-24 ———— / 01:02 她：内容）
+function parseTxt(str) {
+  const lines = String(str || '').split(/\r?\n/);
+  const msgs = [];
+  const labelCount = {};
+  let curDate = null;
+  let header = null;
+  for (const raw of lines) {
+    const line = raw.trim();
+    const dm = line.match(/^————\s*(\d{4})-(\d{2})-(\d{2})\s*————$/);
+    if (dm) {
+      curDate = dm[1] + '-' + dm[2] + '-' + dm[3];
+      continue;
+    }
+    const hm = line.match(/^《(.+?)》\s*微信聊天记录/);
+    if (hm) {
+      header = hm[1];
+      continue;
+    }
+    const m = line.match(/^(\d{2}):(\d{2})(?::(\d{2}))?\s+([^：:]+)[：:](.*)$/);
+    if (!m || !curDate) continue;
+    const t = new Date(curDate + 'T' + m[1] + ':' + m[2] + ':' + (m[3] || '00')).getTime();
+    if (isNaN(t)) continue;
+    const who = (m[4] || '').trim();
+    const text = (m[5] || '').trim();
+    labelCount[who] = (labelCount[who] || 0) + 1;
+    if (!who) continue;
+    if (!text || text === '[系统消息]') {
+      msgs.push({ t, sender: who, text: '', other: true });
+    } else {
+      msgs.push({ t, sender: who, text });
+    }
+  }
+  const labels = Object.keys(labelCount).sort((a, b) => labelCount[b] - labelCount[a]);
+  return { msgs, header, labels, labelCount };
+}
+
+// 时间值 → 毫秒时间戳（兼容秒/毫秒/日期字符串）
+function toMs(v) {
+  if (v == null) return NaN;
+  if (typeof v === 'number') {
+    return v < 1e11 ? v * 1000 : v;
+  }
+  if (typeof v === 'string') {
+    const n = parseInt(v, 10);
+    if (!isNaN(n) && /^\d+$/.test(v.trim())) return n < 1e11 ? n * 1000 : n;
+    return new Date(v).getTime();
+  }
+  return new Date(v).getTime();
+}
+
+// 单条 JSON 消息 → 内部消息对象（无法识别的返回 null）
+function msgFromRaw(item) {
+  const rawText = item.text != null ? String(item.text).trim() : '';
+  let t = item.create_time != null ? toMs(item.create_time) : NaN;
+  if (isNaN(t)) {
+    t = toMs(item.createTime != null ? item.createTime : item.time != null ? item.time : item.ts != null ? item.ts : item.timestamp);
+  }
+  if (!t || isNaN(t)) return null;
+  let sender = item.sender_id || item.senderId || item.sender || item.from || item.fromUser || '';
+  sender = String(sender);
+  if (!sender && item.from_self != null) sender = item.from_self ? '__me__' : '__other__';
+  let fromSelf = null;
+  if (item.from_self != null) fromSelf = !!item.from_self;
+  else if (item.isSend != null) fromSelf = !!item.isSend;
+  else if (item.fromSelf != null) fromSelf = !!item.fromSelf;
+  else if (item.self != null) fromSelf = !!item.self;
+  if (!rawText) {
+    return { t, sender, text: '', other: true, fromSelf };
+  }
+  return { t, sender, text: rawText, fromSelf };
+}
+
+// 原始消息数组 → { msgs, meta } 或 { error }
+function arrayToResult(arr) {
+  const msgs = [];
+  for (const it of arr) {
+    const m = msgFromRaw(it);
+    if (m) msgs.push(m);
+  }
+  if (!msgs.length) return { error: '没有解析到任何消息，请检查内容格式' };
+  const counts = {};
+  msgs.forEach((m) => (counts[m.sender] = (counts[m.sender] || 0) + 1));
+  const senderIds = Object.keys(counts)
+    .filter((s) => s)
+    .sort((a, b) => counts[b] - counts[a]);
+  return { msgs, meta: { type: 'json', senderIds, counts } };
+}
+
+// 统一入口：接受字符串（JSON/TXT）或原始消息数组 → { msgs, meta } 或 { error }
+function parseInput(str) {
+  if (Array.isArray(str)) {
+    return arrayToResult(str);
+  }
+  const json = tryParseJSON(str);
+  if (json) {
+    return arrayToResult(json);
+  }
+  const t = parseTxt(str);
+  if (t && t.msgs.length > 1) {
+    return { msgs: t.msgs, meta: { type: 'txt', senderIds: t.labels, counts: t.labelCount, header: t.header } };
+  }
+  return { error: '无法识别聊天记录格式（支持微信导出的 JSON 或 TXT）' };
+}
+
+/* ================= 身份识别 ================= */
+
+// 自动猜测"我"：好友验证消息的发送者
+function guessMe(msgs) {
+  for (const m of msgs) {
+    if (m.text && m.text.indexOf('我通过了你的朋友验证请求') >= 0) return m.sender;
+  }
+  for (const m of msgs) {
+    if (m.fromSelf === true) return m.sender;
+  }
+  return null;
+}
+
+// TXT 里的称呼推断：我 → me；她/他 → friend
+function guessTxtRole(labels) {
+  const me = labels.find((l) => l === '我');
+  const friend = labels.find((l) => l === '她' || l === '他');
+  return { me: me || null, friend: friend || null };
+}
+
+/* ================= 核心分析 ================= */
+
+function analyze(msgs, opts) {
+  opts = opts || {};
+  if (!msgs || !msgs.length) return null;
+  const list = msgs.slice().sort((a, b) => a.t - b.t);
+
+  // 双方身份
+  const counts = {};
+  list.forEach((m) => (counts[m.sender] = (counts[m.sender] || 0) + 1));
+  const ids = Object.keys(counts)
+    .filter((s) => s)
+    .sort((a, b) => counts[b] - counts[a]);
+  let myKey = opts.myKey != null ? opts.myKey : guessMe(list);
+  if (!myKey || counts[myKey] == null) myKey = ids[0];
+  const friendKey = ids.filter((k) => k !== myKey).sort((a, b) => counts[b] - counts[a])[0] || myKey;
+  const meName = opts.meName || '我';
+  const friendName = opts.friendName || 'TA';
+  const isMine = (m) => m.sender === myKey;
+  const isFriend = (m) => m.sender === friendKey;
+
+  const mineArr = list.filter(isMine);
+  const friendArr = list.filter(isFriend);
+  const textMsgs = list.filter((m) => m.text);
+  const start = list[0].t;
+  const end = list[list.length - 1].t;
+  const spanDays = Math.max(1, Math.round(((end - start) / 86400000) * 10) / 10);
+  const total = list.length;
+  const textCount = textMsgs.length;
+
+  // 24 小时活跃分布
+  const hours = new Array(24).fill(0);
+  const myHours = new Array(24).fill(0);
+  const friendHours = new Array(24).fill(0);
+  list.forEach((m) => {
+    const h = new Date(m.t).getHours();
+    hours[h]++;
+    if (isMine(m)) myHours[h]++;
+    else if (isFriend(m)) friendHours[h]++;
+  });
+  let peakHour = 0;
+  hours.forEach((v, i) => {
+    if (v > hours[peakHour]) peakHour = i;
+  });
+  const nightCount = hours.reduce((s, v, i) => s + (isNightHour(i) ? v : 0), 0);
+  const nightPct = Math.round((nightCount / total) * 100);
+
+  // 高频词（仅文字消息）
+  const allTexts = textMsgs.map((m) => m.text);
+  const words = WORDS.extractBigrams(allTexts, 18);
+
+  // 口头禅 / 表情 / 甜蜜度
+  let laughCount = 0;
+  let loveCount = 0;
+  let emojiCount = 0;
+  allTexts.forEach((t) => {
+    const lm = t.match(WORDS.LAUGH_RE);
+    if (lm) laughCount += lm.length;
+    const vm = t.match(WORDS.LOVE_RE);
+    if (vm) loveCount += vm.length;
+    const em = t.match(WORDS.EMOJI_RE);
+    if (em) emojiCount += em.length;
+  });
+
+  // 平均消息长度
+  const avgLen = (arr) =>
+    arr.length ? Math.round(arr.reduce((s, m) => s + m.text.length, 0) / arr.length) : 0;
+  const avgLenMe = avgLen(mineArr.filter((m) => m.text));
+  const avgLenFriend = avgLen(friendArr.filter((m) => m.text));
+
+  // 秒回统计（相邻两条来自不同人、间隔 ≤ 2 小时）
+  const replyGaps = [];
+  for (let i = 1; i < list.length; i++) {
+    const a = list[i - 1];
+    const b = list[i];
+    if (a.sender === b.sender) continue;
+    const gap = (b.t - a.t) / 1000;
+    if (gap >= 0 && gap <= 7200) replyGaps.push(gap);
+  }
+  let replyMedian = null;
+  if (replyGaps.length) {
+    replyGaps.sort((x, y) => x - y);
+    const mid = Math.floor(replyGaps.length / 2);
+    replyMedian =
+      replyGaps.length % 2
+        ? replyGaps[mid]
+        : Math.round((replyGaps[mid - 1] + replyGaps[mid]) / 2);
+  }
+
+  // 每日消息数 → 最活跃一天 / 最长连续聊天
+  const dayCount = {};
+  list.forEach((m) => {
+    const d = fmtDate(m.t);
+    dayCount[d] = (dayCount[d] || 0) + 1;
+  });
+  let activeDay = null;
+  Object.keys(dayCount).forEach((d) => {
+    if (!activeDay || dayCount[d] > activeDay.count) activeDay = { date: d, count: dayCount[d] };
+  });
+  const sortedDays = Object.keys(dayCount).sort();
+  let streak = { days: 0, start: null, end: null };
+  let cur = { days: 0, start: null, end: null };
+  for (let i = 0; i < sortedDays.length; i++) {
+    const d = new Date(sortedDays[i] + 'T00:00:00').getTime();
+    if (i > 0) {
+      const prev = new Date(sortedDays[i - 1] + 'T00:00:00').getTime();
+      if (d - prev === 86400000) {
+        cur.days++;
+        cur.end = sortedDays[i];
+      } else {
+        cur = { days: 1, start: sortedDays[i], end: sortedDays[i] };
+      }
+    } else {
+      cur = { days: 1, start: sortedDays[i], end: sortedDays[i] };
+    }
+    if (cur.days > streak.days) streak = { days: cur.days, start: cur.start, end: cur.end };
+  }
+
+  // 第一条消息
+  const first = textMsgs[0] || list[0];
+
+  // 占比
+  const myPct = Math.round((mineArr.length / total) * 100);
+  const friendPct = Math.round((friendArr.length / total) * 100);
+  const talkMore =
+    mineArr.length > friendArr.length * 1.1
+      ? 'me'
+      : friendArr.length > mineArr.length * 1.1
+      ? 'friend'
+      : 'tie';
+
+  // 年度称号
+  const awards = [];
+  if (nightPct >= 25) {
+    awards.push({
+      icon: '🌙',
+      title: '夜猫子组合',
+      desc: '深夜消息占 ' + nightPct + '%，凌晨 ' + peakHour + ':00 是你们的主场',
+    });
+  }
+  if (total >= 1000 && spanDays <= 60) {
+    awards.push({
+      icon: '⚡',
+      title: '一见如故',
+      desc: spanDays + ' 天聊了 ' + total + ' 条，平均每天 ' + Math.round(total / spanDays) + ' 条',
+    });
+  }
+  if (talkMore === 'friend') {
+    awards.push({
+      icon: '💬',
+      title: '话痨担当',
+      desc: friendName + ' 贡献了 ' + friendPct + '% 的消息',
+    });
+  } else if (talkMore === 'me') {
+    awards.push({ icon: '💬', title: '话痨担当', desc: meName + ' 贡献了 ' + myPct + '% 的消息' });
+  }
+  if (replyMedian != null && replyMedian <= 60) {
+    awards.push({
+      icon: '🚀',
+      title: '秒回搭档',
+      desc: '互相回复平均只需 ' + replyMedian + ' 秒',
+    });
+  } else if (replyMedian != null && replyMedian <= 300) {
+    awards.push({
+      icon: '⏱️',
+      title: '从不冷场',
+      desc: '互相回复平均 ' + Math.round(replyMedian / 60) + ' 分钟',
+    });
+  }
+  if (laughCount >= 50) {
+    awards.push({ icon: '😂', title: '哈哈怪', desc: '累计大笑 ' + laughCount + ' 次，快乐源泉' });
+  }
+  if (loveCount >= 30) {
+    awards.push({ icon: '🍬', title: '甜度超标', desc: '出现 ' + loveCount + ' 次甜蜜用语' });
+  }
+  if (emojiCount >= 50) {
+    awards.push({ icon: '🎭', title: '表情包大师', desc: '累计斗图 ' + emojiCount + ' 次' });
+  }
+  if (streak.days >= 10) {
+    awards.push({
+      icon: '📅',
+      title: '每日打卡',
+      desc: '连续 ' + streak.days + ' 天保持联系',
+    });
+  }
+  const cappedAwards = awards.slice(0, 5);
+
+  // 总评语
+  let verdict;
+  const tml = talkMore === 'friend' ? friendName : talkMore === 'me' ? meName : '你们俩';
+  if (spanDays <= 60 && total >= 1000) {
+    verdict =
+      '认识 ' + spanDays + ' 天，聊了 ' + total + ' 条消息——有些人一出现，就把别人的聊天置顶了。' +
+      (nightPct >= 25 ? ' 你们尤其擅长在深夜交换心事，月亮都困了，你们还没聊完。' : '') +
+      (laughCount >= 50 ? ' 满屏的"哈哈哈"就是这段关系最好的背景音。' : '') +
+      ' 新的一年，继续把' + tml + '的置顶占满吧。';
+  } else {
+    verdict =
+      '这一年，你们用 ' + total + ' 条消息堆出了一部专属连续剧。' +
+      (nightPct >= 25 ? ' 深夜档主播非你们莫属。' : '') +
+      (laughCount >= 50 ? ' 笑点共享，快乐加倍。' : '') +
+      ' 这份年报送给最懂彼此的你们。';
+  }
+
+  return {
+    mode: 'data',
+    year: new Date(end).getFullYear(),
+    meName,
+    friendName,
+    myKey,
+    friendKey,
+    start,
+    end,
+    startStr: fmtDate(start),
+    endStr: fmtDate(end),
+    spanDays,
+    total,
+    textCount,
+    myCount: mineArr.length,
+    friendCount: friendArr.length,
+    myPct,
+    friendPct,
+    talkMore,
+    avgLenMe,
+    avgLenFriend,
+    hours,
+    myHours,
+    friendHours,
+    peakHour,
+    nightPct,
+    words,
+    laughCount,
+    loveCount,
+    emojiCount,
+    firstMsg: { time: fmtFull(first.t), text: first.text ? first.text.slice(0, 40) : '（一条图片/语音消息）', mine: isMine(first) },
+    activeDay,
+    streak,
+    replyMedian,
+    awards: cappedAwards,
+    verdict,
+  };
+}
+
+/* ================= 问答模式 ================= */
+
+const KNOWN_DAYS_MAP = {
+  不到一个月: 14,
+  '1-3个月': 60,
+  '半年左右': 182,
+  '一年左右': 365,
+  '两三年': 900,
+  '三年以上': 1500,
+  十年以上: 3650,
+};
+
+function analyzeQuiz(ans) {
+  ans = ans || {};
+  const meName = ans.meName || '我';
+  const friendName = ans.friendName || 'TA';
+  const knownDays = KNOWN_DAYS_MAP[ans.knownDays] || 60;
+  const perDay =
+    ans.talkMore === '我' ? 26 : ans.talkMore === 'TA' ? 42 : 34;
+  const seed = (meName + friendName).length % 5;
+  const total = Math.round(knownDays * perDay * (0.85 + seed * 0.08));
+  const myCount = Math.round(total * (ans.talkMore === '我' ? 0.6 : ans.talkMore === 'TA' ? 0.4 : 0.5));
+  const timeText = {
+    深夜: '深夜档常驻嘉宾，越夜越清醒',
+    早上: '早安专业户，一天从互相招呼开始',
+    中午: '饭点必现，干饭也要同步汇报',
+    下午: '摸鱼搭子，下午茶时间准时上线',
+    晚上: '黄金档主播，晚上是你们的舞台',
+    随时: '全天候在线，随叫随到',
+  }[ans.time] || '全天候在线，随叫随到';
+  const nightPct = ans.time === '深夜' ? 42 : 18;
+  const talkMoreText =
+    ans.talkMore === '我'
+      ? meName + ' 更爱分享，是话题发动机'
+      : ans.talkMore === 'TA'
+      ? friendName + ' 更爱分享，是话题发动机'
+      : '你们五五开，双向奔赴的话痨';
+  const awards = [
+    { icon: '📅', title: '老友记', desc: '相识 ' + (ans.knownDays || '') + '，时间是最好的滤镜' },
+  ];
+  if (ans.time === '深夜') {
+    awards.push({ icon: '🌙', title: '夜猫子组合', desc: '深夜消息占 ' + nightPct + '%，月亮都困了你们还没聊完' });
+  }
+  awards.push({
+    icon: '💬',
+    title: '话痨担当',
+    desc: talkMoreText,
+  });
+  if (ans.word) {
+    awards.push({ icon: '🏷️', title: '专属标签', desc: 'TA 在你心里 = 「' + ans.word + '」' });
+  }
+  if (ans.topic) {
+    awards.push({ icon: '🍜', title: '灵魂话题', desc: '最常聊：「' + ans.topic + '」' });
+  }
+  const verdict =
+    '这篇年报由 ' + meName + ' 亲手填写。相识 ' + (ans.knownDays || '未知') +
+    '，最常聊「' + (ans.topic || '说不完的话') + '」。' + timeText + '。' +
+    (ans.memory ? ' 最难忘的是：「' + ans.memory + '」。' : '') +
+    ' 故事还在继续，明年年报见。';
+
+  return {
+    mode: 'quiz',
+    year: new Date().getFullYear(),
+    meName,
+    friendName,
+    spanDays: knownDays,
+    total,
+    myCount,
+    friendCount: total - myCount,
+    myPct: ans.talkMore === '我' ? 60 : ans.talkMore === 'TA' ? 40 : 50,
+    friendPct: ans.talkMore === '我' ? 40 : ans.talkMore === 'TA' ? 60 : 50,
+    talkMore: ans.talkMore === '我' ? 'me' : ans.talkMore === 'TA' ? 'friend' : 'tie',
+    timeText,
+    talkMoreText,
+    nightPct,
+    peakHour: 0,
+    words: [],
+    topic: ans.topic || '',
+    word: ans.word || '',
+    memory: ans.memory || '',
+    awards: awards.slice(0, 5),
+    verdict,
+    quiz: true,
+  };
+}
+
+module.exports = {
+  parseInput,
+  analyze,
+  analyzeQuiz,
+  guessMe,
+  guessTxtRole,
+  fmtDate,
+  fmtTime,
+  fmtFull,
+  isNightHour,
+};
+
+var Engine = module.exports;
+
+</script>
+<script>
+var SAMPLE_DATA = [{"local_id":"0","server_id":"8999999999999999999","local_type":"1","create_time":"1790784060","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"我通过了你的朋友验证请求，现在我们可以开始聊天了"},{"local_id":"281","server_id":"9000000000000000280","local_type":"1","create_time":"1790794776","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈"},{"local_id":"282","server_id":"9000000000000000281","local_type":"1","create_time":"1790794844","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"奶茶"},{"local_id":"283","server_id":"9000000000000000282","local_type":"1","create_time":"1790794882","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"出来玩"},{"local_id":"284","server_id":"9000000000000000283","local_type":"1","create_time":"1790794950","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣奶茶"},{"local_id":"285","server_id":"9000000000000000284","local_type":"1","create_time":"1790794978","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂"},{"local_id":"286","server_id":"9000000000000000285","local_type":"1","create_time":"1790795106","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂"},{"local_id":"287","server_id":"9000000000000000286","local_type":"1","create_time":"1790795260","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"唱歌嗯嗯"},{"local_id":"288","server_id":"9000000000000000287","local_type":"1","create_time":"1790795269","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"考试🌙"},{"local_id":"289","server_id":"9000000000000000288","local_type":"1","create_time":"1790795348","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333"},{"local_id":"290","server_id":"9000000000000000289","local_type":"1","create_time":"1790795358","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"加班"},{"local_id":"338","server_id":"9000000000000000337","local_type":"1","create_time":"1790813051","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"困了"},{"local_id":"339","server_id":"9000000000000000338","local_type":"1","create_time":"1790813080","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死想你"},{"local_id":"340","server_id":"9000000000000000339","local_type":"1","create_time":"1790813108","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"奶茶"},{"local_id":"341","server_id":"9000000000000000340","local_type":"1","create_time":"1790813184","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚电影🥰🥰"},{"local_id":"342","server_id":"9000000000000000341","local_type":"1","create_time":"1790813274","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333冲鸭"},{"local_id":"471","server_id":"9000000000000000470","local_type":"1","create_time":"1790827401","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"472","server_id":"9000000000000000471","local_type":"1","create_time":"1790827483","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333"},{"local_id":"473","server_id":"9000000000000000472","local_type":"1","create_time":"1790827744","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"474","server_id":"9000000000000000473","local_type":"1","create_time":"1790827981","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂火锅🥰"},{"local_id":"475","server_id":"9000000000000000474","local_type":"1","create_time":"1790828048","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"天气"},{"local_id":"476","server_id":"9000000000000000475","local_type":"3","create_time":"1790828109","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"477","server_id":"9000000000000000476","local_type":"1","create_time":"1790828173","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"奶茶绝了"},{"local_id":"478","server_id":"9000000000000000477","local_type":"1","create_time":"1790828223","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"479","server_id":"9000000000000000478","local_type":"1","create_time":"1790828279","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"睡觉"},{"local_id":"480","server_id":"9000000000000000479","local_type":"1","create_time":"1790828362","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"游戏收到"},{"local_id":"481","server_id":"9000000000000000480","local_type":"1","create_time":"1790828404","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在吗"},{"local_id":"482","server_id":"9000000000000000481","local_type":"1","create_time":"1790828439","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"在吗"},{"local_id":"483","server_id":"9000000000000000482","local_type":"1","create_time":"1790828458","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好"},{"local_id":"484","server_id":"9000000000000000483","local_type":"1","create_time":"1790828463","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"485","server_id":"9000000000000000484","local_type":"1","create_time":"1790828730","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"周末"},{"local_id":"486","server_id":"9000000000000000485","local_type":"1","create_time":"1790828794","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"谁懂啊"},{"local_id":"487","server_id":"9000000000000000486","local_type":"1","create_time":"1790829091","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"周末几点睡"},{"local_id":"488","server_id":"9000000000000000487","local_type":"1","create_time":"1790829141","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈"},{"local_id":"489","server_id":"9000000000000000488","local_type":"1","create_time":"1790829146","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈绝了"},{"local_id":"490","server_id":"9000000000000000489","local_type":"1","create_time":"1790829196","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂加班"},{"local_id":"491","server_id":"9000000000000000490","local_type":"1","create_time":"1790829277","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"天气"},{"local_id":"492","server_id":"9000000000000000491","local_type":"1","create_time":"1790829293","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚鹅鹅鹅睡觉想你"},{"local_id":"493","server_id":"9000000000000000492","local_type":"1","create_time":"1790829311","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课"},{"local_id":"317","server_id":"9000000000000000316","local_type":"1","create_time":"1790876985","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333"},{"local_id":"318","server_id":"9000000000000000317","local_type":"1","create_time":"1790877039","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"319","server_id":"9000000000000000318","local_type":"1","create_time":"1790877099","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🌙"},{"local_id":"655","server_id":"9000000000000000654","local_type":"1","create_time":"1790888764","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣电影那必须的"},{"local_id":"656","server_id":"9000000000000000655","local_type":"1","create_time":"1790888803","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好耶"},{"local_id":"657","server_id":"9000000000000000656","local_type":"1","create_time":"1790888840","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣"},{"local_id":"658","server_id":"9000000000000000657","local_type":"1","create_time":"1790889281","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚狗"},{"local_id":"666","server_id":"9000000000000000665","local_type":"1","create_time":"1790993937","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚2333电影"},{"local_id":"633","server_id":"9000000000000000632","local_type":"1","create_time":"1791043565","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"634","server_id":"9000000000000000633","local_type":"1","create_time":"1791043573","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"奶茶哈哈哈哈"},{"local_id":"635","server_id":"9000000000000000634","local_type":"1","create_time":"1791043618","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"636","server_id":"9000000000000000635","local_type":"1","create_time":"1791043666","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好耶"},{"local_id":"637","server_id":"9000000000000000636","local_type":"1","create_time":"1791043687","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"回家"},{"local_id":"638","server_id":"9000000000000000637","local_type":"1","create_time":"1791043759","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"谁懂啊"},{"local_id":"639","server_id":"9000000000000000638","local_type":"1","create_time":"1791043789","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"绝了"},{"local_id":"575","server_id":"9000000000000000574","local_type":"1","create_time":"1791048645","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好耶"},{"local_id":"231","server_id":"9000000000000000230","local_type":"1","create_time":"1791052340","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"137","server_id":"9000000000000000136","local_type":"1","create_time":"1791067399","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"猫"},{"local_id":"320","server_id":"9000000000000000319","local_type":"1","create_time":"1791069265","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"逛街好耶"},{"local_id":"321","server_id":"9000000000000000320","local_type":"1","create_time":"1791069271","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅吃饭没"},{"local_id":"322","server_id":"9000000000000000321","local_type":"1","create_time":"1791069323","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"睡觉哈哈哈哈"},{"local_id":"323","server_id":"9000000000000000322","local_type":"1","create_time":"1791069328","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"回家"},{"local_id":"324","server_id":"9000000000000000323","local_type":"1","create_time":"1791069576","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🍚"},{"local_id":"325","server_id":"9000000000000000324","local_type":"1","create_time":"1791069597","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"睡觉"},{"local_id":"326","server_id":"9000000000000000325","local_type":"1","create_time":"1791069626","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"贴贴"},{"local_id":"327","server_id":"9000000000000000326","local_type":"1","create_time":"1791069671","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣"},{"local_id":"328","server_id":"9000000000000000327","local_type":"1","create_time":"1791069733","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"329","server_id":"9000000000000000328","local_type":"1","create_time":"1791069755","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死唱歌贴贴"},{"local_id":"330","server_id":"9000000000000000329","local_type":"1","create_time":"1791070256","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂快递"},{"local_id":"331","server_id":"9000000000000000330","local_type":"1","create_time":"1791070279","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚救命"},{"local_id":"332","server_id":"9000000000000000331","local_type":"1","create_time":"1791070326","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦猫爱你"},{"local_id":"22","server_id":"9000000000000000021","local_type":"1","create_time":"1791101570","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"23","server_id":"9000000000000000022","local_type":"1","create_time":"1791101579","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死吃饭😂"},{"local_id":"24","server_id":"9000000000000000023","local_type":"1","create_time":"1791101594","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"睡觉救命"},{"local_id":"25","server_id":"9000000000000000024","local_type":"1","create_time":"1791101641","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"快递"},{"local_id":"26","server_id":"9000000000000000025","local_type":"1","create_time":"1791101670","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死加班"},{"local_id":"27","server_id":"9000000000000000026","local_type":"3","create_time":"1791101725","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"28","server_id":"9000000000000000027","local_type":"1","create_time":"1791102029","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气吃饭没"},{"local_id":"29","server_id":"9000000000000000028","local_type":"1","create_time":"1791102089","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈"},{"local_id":"377","server_id":"9000000000000000376","local_type":"1","create_time":"1791102362","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"下雨"},{"local_id":"378","server_id":"9000000000000000377","local_type":"1","create_time":"1791102809","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"逛街"},{"local_id":"379","server_id":"9000000000000000378","local_type":"1","create_time":"1791102848","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"狗真的吗"},{"local_id":"380","server_id":"9000000000000000379","local_type":"1","create_time":"1791102985","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚快递"},{"local_id":"381","server_id":"9000000000000000380","local_type":"1","create_time":"1791103574","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"逛街🤣"},{"local_id":"382","server_id":"9000000000000000381","local_type":"1","create_time":"1791103641","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"睡觉"},{"local_id":"383","server_id":"9000000000000000382","local_type":"1","create_time":"1791103663","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"那必须的"},{"local_id":"384","server_id":"9000000000000000383","local_type":"1","create_time":"1791103707","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"猫"},{"local_id":"385","server_id":"9000000000000000384","local_type":"1","create_time":"1791103757","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"唱歌"},{"local_id":"386","server_id":"9000000000000000385","local_type":"1","create_time":"1791103782","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"☕"},{"local_id":"387","server_id":"9000000000000000386","local_type":"1","create_time":"1791103860","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试谁懂啊"},{"local_id":"388","server_id":"9000000000000000387","local_type":"1","create_time":"1791103883","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333逛街"},{"local_id":"576","server_id":"9000000000000000575","local_type":"1","create_time":"1791138066","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"577","server_id":"9000000000000000576","local_type":"3","create_time":"1791138084","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"578","server_id":"9000000000000000577","local_type":"1","create_time":"1791138514","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"579","server_id":"9000000000000000578","local_type":"1","create_time":"1791138541","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"天气🤣"},{"local_id":"560","server_id":"9000000000000000559","local_type":"1","create_time":"1791203683","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚🤣猫"},{"local_id":"561","server_id":"9000000000000000560","local_type":"1","create_time":"1791203719","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚哈哈哈哈"},{"local_id":"562","server_id":"9000000000000000561","local_type":"1","create_time":"1791203747","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"563","server_id":"9000000000000000562","local_type":"1","create_time":"1791203825","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死考试🥰"},{"local_id":"564","server_id":"9000000000000000563","local_type":"1","create_time":"1791203902","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈吃饭"},{"local_id":"565","server_id":"9000000000000000564","local_type":"1","create_time":"1791204239","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"逛街"},{"local_id":"692","server_id":"9000000000000000691","local_type":"1","create_time":"1791217272","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"天气几点睡"},{"local_id":"764","server_id":"9000000000000000763","local_type":"1","create_time":"1791266421","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"作业"},{"local_id":"765","server_id":"9000000000000000764","local_type":"1","create_time":"1791266685","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂睡觉困了"},{"local_id":"766","server_id":"9000000000000000765","local_type":"1","create_time":"1791267066","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣笑死宝贝"},{"local_id":"767","server_id":"9000000000000000766","local_type":"1","create_time":"1791267146","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣奶茶真的吗"},{"local_id":"768","server_id":"9000000000000000767","local_type":"1","create_time":"1791267195","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚游戏"},{"local_id":"769","server_id":"9000000000000000768","local_type":"1","create_time":"1791267241","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"770","server_id":"9000000000000000769","local_type":"1","create_time":"1791267267","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死"},{"local_id":"771","server_id":"9000000000000000770","local_type":"1","create_time":"1791267317","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气🍚"},{"local_id":"772","server_id":"9000000000000000771","local_type":"1","create_time":"1791267665","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课嗯嗯"},{"local_id":"773","server_id":"9000000000000000772","local_type":"1","create_time":"1791267676","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在吗"},{"local_id":"774","server_id":"9000000000000000773","local_type":"3","create_time":"1791267972","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"646","server_id":"9000000000000000645","local_type":"1","create_time":"1791271286","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈快递醒了没"},{"local_id":"647","server_id":"9000000000000000646","local_type":"1","create_time":"1791271869","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚天气救命"},{"local_id":"648","server_id":"9000000000000000647","local_type":"3","create_time":"1791271923","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"649","server_id":"9000000000000000648","local_type":"1","create_time":"1791272005","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅火锅"},{"local_id":"650","server_id":"9000000000000000649","local_type":"1","create_time":"1791272021","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"奶茶"},{"local_id":"651","server_id":"9000000000000000650","local_type":"1","create_time":"1791272064","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"698","server_id":"9000000000000000697","local_type":"1","create_time":"1791288411","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"游戏🤣"},{"local_id":"699","server_id":"9000000000000000698","local_type":"1","create_time":"1791288492","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"700","server_id":"9000000000000000699","local_type":"1","create_time":"1791288524","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯嗯"},{"local_id":"701","server_id":"9000000000000000700","local_type":"1","create_time":"1791288576","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试"},{"local_id":"652","server_id":"9000000000000000651","local_type":"1","create_time":"1791288628","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦回家就是说"},{"local_id":"702","server_id":"9000000000000000701","local_type":"3","create_time":"1791288662","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"653","server_id":"9000000000000000652","local_type":"3","create_time":"1791288688","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"654","server_id":"9000000000000000653","local_type":"1","create_time":"1791288701","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"天气"},{"local_id":"703","server_id":"9000000000000000702","local_type":"1","create_time":"1791288702","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死🥰"},{"local_id":"704","server_id":"9000000000000000703","local_type":"1","create_time":"1791288722","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"周末"},{"local_id":"705","server_id":"9000000000000000704","local_type":"1","create_time":"1791288881","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈想你早安"},{"local_id":"706","server_id":"9000000000000000705","local_type":"1","create_time":"1791288916","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课"},{"local_id":"707","server_id":"9000000000000000706","local_type":"1","create_time":"1791288963","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"猫宝贝"},{"local_id":"708","server_id":"9000000000000000707","local_type":"1","create_time":"1791288992","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"709","server_id":"9000000000000000708","local_type":"1","create_time":"1791289030","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"吃饭就是说"},{"local_id":"710","server_id":"9000000000000000709","local_type":"1","create_time":"1791289110","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣火锅"},{"local_id":"711","server_id":"9000000000000000710","local_type":"1","create_time":"1791289164","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"快递好耶好耶贴贴"},{"local_id":"7","server_id":"9000000000000000006","local_type":"1","create_time":"1791304989","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈火锅"},{"local_id":"8","server_id":"9000000000000000007","local_type":"1","create_time":"1791305393","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"在吗"},{"local_id":"9","server_id":"9000000000000000008","local_type":"1","create_time":"1791305400","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"天气好耶"},{"local_id":"10","server_id":"9000000000000000009","local_type":"1","create_time":"1791305472","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦鹅鹅鹅快递"},{"local_id":"11","server_id":"9000000000000000010","local_type":"1","create_time":"1791305516","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"加班☕"},{"local_id":"12","server_id":"9000000000000000011","local_type":"1","create_time":"1791305573","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"快递冲"},{"local_id":"13","server_id":"9000000000000000012","local_type":"1","create_time":"1791305578","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣电影"},{"local_id":"14","server_id":"9000000000000000013","local_type":"1","create_time":"1791305586","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"出来玩"},{"local_id":"15","server_id":"9000000000000000014","local_type":"1","create_time":"1791305671","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好耶好耶"},{"local_id":"16","server_id":"9000000000000000015","local_type":"1","create_time":"1791305738","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"周末哈哈哈哈"},{"local_id":"17","server_id":"9000000000000000016","local_type":"1","create_time":"1791305750","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦周末"},{"local_id":"360","server_id":"9000000000000000359","local_type":"1","create_time":"1791350591","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅唱歌晚安"},{"local_id":"361","server_id":"9000000000000000360","local_type":"1","create_time":"1791350672","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"唱歌救命心心"},{"local_id":"362","server_id":"9000000000000000361","local_type":"1","create_time":"1791350984","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"回家"},{"local_id":"363","server_id":"9000000000000000362","local_type":"1","create_time":"1791351178","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气"},{"local_id":"364","server_id":"9000000000000000363","local_type":"1","create_time":"1791351251","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"救命"},{"local_id":"365","server_id":"9000000000000000364","local_type":"1","create_time":"1791351324","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚2333回家贴贴"},{"local_id":"366","server_id":"9000000000000000365","local_type":"1","create_time":"1791351349","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"收到"},{"local_id":"367","server_id":"9000000000000000366","local_type":"3","create_time":"1791351359","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"368","server_id":"9000000000000000367","local_type":"1","create_time":"1791351894","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"369","server_id":"9000000000000000368","local_type":"1","create_time":"1791351964","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"冲心心"},{"local_id":"370","server_id":"9000000000000000369","local_type":"1","create_time":"1791352036","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"冲鸭"},{"local_id":"371","server_id":"9000000000000000370","local_type":"1","create_time":"1791352109","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚救命"},{"local_id":"372","server_id":"9000000000000000371","local_type":"1","create_time":"1791352264","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"373","server_id":"9000000000000000372","local_type":"1","create_time":"1791352285","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅回家"},{"local_id":"374","server_id":"9000000000000000373","local_type":"1","create_time":"1791352375","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"下雨几点睡"},{"local_id":"375","server_id":"9000000000000000374","local_type":"1","create_time":"1791352386","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅外卖"},{"local_id":"376","server_id":"9000000000000000375","local_type":"1","create_time":"1791352447","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚奶茶"},{"local_id":"57","server_id":"9000000000000000056","local_type":"1","create_time":"1791392497","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🥰"},{"local_id":"58","server_id":"9000000000000000057","local_type":"1","create_time":"1791392529","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"奶茶贴贴"},{"local_id":"59","server_id":"9000000000000000058","local_type":"3","create_time":"1791392617","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"60","server_id":"9000000000000000059","local_type":"1","create_time":"1791392685","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气真的吗"},{"local_id":"61","server_id":"9000000000000000060","local_type":"1","create_time":"1791392727","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333睡觉😂"},{"local_id":"62","server_id":"9000000000000000061","local_type":"1","create_time":"1791392905","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"睡觉"},{"local_id":"63","server_id":"9000000000000000062","local_type":"1","create_time":"1791392947","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"吃饭"},{"local_id":"64","server_id":"9000000000000000063","local_type":"1","create_time":"1791393011","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈🍚"},{"local_id":"65","server_id":"9000000000000000064","local_type":"1","create_time":"1791393092","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333游戏在干嘛"},{"local_id":"66","server_id":"9000000000000000065","local_type":"1","create_time":"1791393139","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"醒了没"},{"local_id":"67","server_id":"9000000000000000066","local_type":"1","create_time":"1791393174","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂回家🌙"},{"local_id":"68","server_id":"9000000000000000067","local_type":"1","create_time":"1791393234","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好耶好耶"},{"local_id":"69","server_id":"9000000000000000068","local_type":"1","create_time":"1791393489","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣作业冲鸭"},{"local_id":"70","server_id":"9000000000000000069","local_type":"1","create_time":"1791393524","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦上课"},{"local_id":"71","server_id":"9000000000000000070","local_type":"1","create_time":"1791393553","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"冲"},{"local_id":"72","server_id":"9000000000000000071","local_type":"1","create_time":"1791393630","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"73","server_id":"9000000000000000072","local_type":"1","create_time":"1791393676","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"吃饭没毛病"},{"local_id":"74","server_id":"9000000000000000073","local_type":"1","create_time":"1791393880","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"睡觉"},{"local_id":"75","server_id":"9000000000000000074","local_type":"1","create_time":"1791393932","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂作业"},{"local_id":"76","server_id":"9000000000000000075","local_type":"1","create_time":"1791394017","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"奶茶"},{"local_id":"77","server_id":"9000000000000000076","local_type":"1","create_time":"1791394076","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚笑死作业"},{"local_id":"78","server_id":"9000000000000000077","local_type":"1","create_time":"1791394091","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死"},{"local_id":"79","server_id":"9000000000000000078","local_type":"1","create_time":"1791394103","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"逛街那必须的"},{"local_id":"80","server_id":"9000000000000000079","local_type":"1","create_time":"1791394142","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣上课真的吗"},{"local_id":"81","server_id":"9000000000000000080","local_type":"1","create_time":"1791394266","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦真的吗"},{"local_id":"82","server_id":"9000000000000000081","local_type":"1","create_time":"1791394294","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"83","server_id":"9000000000000000082","local_type":"1","create_time":"1791394322","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死电影"},{"local_id":"84","server_id":"9000000000000000083","local_type":"1","create_time":"1791394354","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅"},{"local_id":"85","server_id":"9000000000000000084","local_type":"1","create_time":"1791394363","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"逛街"},{"local_id":"86","server_id":"9000000000000000085","local_type":"1","create_time":"1791394420","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"电影救命"},{"local_id":"87","server_id":"9000000000000000086","local_type":"1","create_time":"1791394432","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦嗯嗯"},{"local_id":"88","server_id":"9000000000000000087","local_type":"1","create_time":"1791394473","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"狗🍚"},{"local_id":"89","server_id":"9000000000000000088","local_type":"1","create_time":"1791394952","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333"},{"local_id":"665","server_id":"9000000000000000664","local_type":"1","create_time":"1791395267","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦哈哈哈哈"},{"local_id":"90","server_id":"9000000000000000089","local_type":"1","create_time":"1791395454","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在吗"},{"local_id":"91","server_id":"9000000000000000090","local_type":"1","create_time":"1791395509","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦哈哈哈哈唱歌😘"},{"local_id":"92","server_id":"9000000000000000091","local_type":"1","create_time":"1791395880","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅"},{"local_id":"93","server_id":"9000000000000000092","local_type":"1","create_time":"1791395921","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"睡觉"},{"local_id":"334","server_id":"9000000000000000333","local_type":"1","create_time":"1791424904","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦😂"},{"local_id":"335","server_id":"9000000000000000334","local_type":"1","create_time":"1791425373","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气"},{"local_id":"336","server_id":"9000000000000000335","local_type":"1","create_time":"1791425390","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅睡觉救命"},{"local_id":"337","server_id":"9000000000000000336","local_type":"1","create_time":"1791425459","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死逛街谁懂啊"},{"local_id":"222","server_id":"9000000000000000221","local_type":"1","create_time":"1791436887","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在吗"},{"local_id":"223","server_id":"9000000000000000222","local_type":"1","create_time":"1791436898","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣游戏冲鸭"},{"local_id":"224","server_id":"9000000000000000223","local_type":"1","create_time":"1791436931","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死"},{"local_id":"225","server_id":"9000000000000000224","local_type":"1","create_time":"1791437005","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅😘"},{"local_id":"145","server_id":"9000000000000000144","local_type":"1","create_time":"1791454736","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"想你"},{"local_id":"146","server_id":"9000000000000000145","local_type":"1","create_time":"1791454748","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈天气"},{"local_id":"147","server_id":"9000000000000000146","local_type":"1","create_time":"1791454769","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅"},{"local_id":"148","server_id":"9000000000000000147","local_type":"1","create_time":"1791454851","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333快递"},{"local_id":"149","server_id":"9000000000000000148","local_type":"1","create_time":"1791454876","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"加班"},{"local_id":"150","server_id":"9000000000000000149","local_type":"1","create_time":"1791454895","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈下雨"},{"local_id":"151","server_id":"9000000000000000150","local_type":"1","create_time":"1791454944","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"想你"},{"local_id":"580","server_id":"9000000000000000579","local_type":"1","create_time":"1791515047","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣考试"},{"local_id":"581","server_id":"9000000000000000580","local_type":"1","create_time":"1791515130","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"在吗"},{"local_id":"275","server_id":"9000000000000000274","local_type":"1","create_time":"1791544411","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试贴贴"},{"local_id":"276","server_id":"9000000000000000275","local_type":"1","create_time":"1791544466","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈游戏"},{"local_id":"277","server_id":"9000000000000000276","local_type":"1","create_time":"1791544549","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"几点睡"},{"local_id":"278","server_id":"9000000000000000277","local_type":"1","create_time":"1791545011","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈吃饭"},{"local_id":"279","server_id":"9000000000000000278","local_type":"1","create_time":"1791545100","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"奶茶"},{"local_id":"280","server_id":"9000000000000000279","local_type":"1","create_time":"1791545116","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"100","server_id":"9000000000000000099","local_type":"1","create_time":"1791600576","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"外卖🤣"},{"local_id":"101","server_id":"9000000000000000100","local_type":"1","create_time":"1791600585","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"外卖"},{"local_id":"102","server_id":"9000000000000000101","local_type":"3","create_time":"1791600610","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"103","server_id":"9000000000000000102","local_type":"1","create_time":"1791600642","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈睡觉早安心心"},{"local_id":"104","server_id":"9000000000000000103","local_type":"1","create_time":"1791600722","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"105","server_id":"9000000000000000104","local_type":"1","create_time":"1791601234","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂睡觉好耶"},{"local_id":"106","server_id":"9000000000000000105","local_type":"1","create_time":"1791601267","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"107","server_id":"9000000000000000106","local_type":"1","create_time":"1791601288","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"108","server_id":"9000000000000000107","local_type":"1","create_time":"1791601300","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"109","server_id":"9000000000000000108","local_type":"1","create_time":"1791601385","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦😂吃饭"},{"local_id":"110","server_id":"9000000000000000109","local_type":"1","create_time":"1791601444","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气笑死"},{"local_id":"111","server_id":"9000000000000000110","local_type":"1","create_time":"1791601937","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂加班晚安"},{"local_id":"112","server_id":"9000000000000000111","local_type":"1","create_time":"1791602466","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈游戏没毛病"},{"local_id":"113","server_id":"9000000000000000112","local_type":"1","create_time":"1791602499","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦哈哈哈哈"},{"local_id":"114","server_id":"9000000000000000113","local_type":"1","create_time":"1791602570","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈🤣"},{"local_id":"115","server_id":"9000000000000000114","local_type":"1","create_time":"1791602631","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"作业"},{"local_id":"116","server_id":"9000000000000000115","local_type":"1","create_time":"1791602663","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅"},{"local_id":"117","server_id":"9000000000000000116","local_type":"1","create_time":"1791602751","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅☕"},{"local_id":"118","server_id":"9000000000000000117","local_type":"1","create_time":"1791603015","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"119","server_id":"9000000000000000118","local_type":"1","create_time":"1791603026","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈考试"},{"local_id":"120","server_id":"9000000000000000119","local_type":"1","create_time":"1791603563","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣出来玩"},{"local_id":"121","server_id":"9000000000000000120","local_type":"1","create_time":"1791603606","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"122","server_id":"9000000000000000121","local_type":"1","create_time":"1791603619","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"加班那必须的"},{"local_id":"123","server_id":"9000000000000000122","local_type":"1","create_time":"1791603652","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"511","server_id":"9000000000000000510","local_type":"1","create_time":"1791694345","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦哈哈哈哈"},{"local_id":"512","server_id":"9000000000000000511","local_type":"1","create_time":"1791694394","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"奶茶"},{"local_id":"513","server_id":"9000000000000000512","local_type":"1","create_time":"1791694460","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"奶茶"},{"local_id":"514","server_id":"9000000000000000513","local_type":"1","create_time":"1791694502","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"加班"},{"local_id":"515","server_id":"9000000000000000514","local_type":"1","create_time":"1791694589","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦鹅鹅鹅吃饭"},{"local_id":"516","server_id":"9000000000000000515","local_type":"1","create_time":"1791694644","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"电影真的吗"},{"local_id":"517","server_id":"9000000000000000516","local_type":"1","create_time":"1791694872","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"518","server_id":"9000000000000000517","local_type":"1","create_time":"1791695104","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣"},{"local_id":"519","server_id":"9000000000000000518","local_type":"1","create_time":"1791695574","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"火锅"},{"local_id":"520","server_id":"9000000000000000519","local_type":"1","create_time":"1791695636","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"周末贴贴"},{"local_id":"521","server_id":"9000000000000000520","local_type":"3","create_time":"1791695687","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"571","server_id":"9000000000000000570","local_type":"1","create_time":"1791730570","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈困了"},{"local_id":"572","server_id":"9000000000000000571","local_type":"1","create_time":"1791730576","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333下雨"},{"local_id":"573","server_id":"9000000000000000572","local_type":"1","create_time":"1791730597","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"快递"},{"local_id":"574","server_id":"9000000000000000573","local_type":"1","create_time":"1791730626","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333"},{"local_id":"602","server_id":"9000000000000000601","local_type":"1","create_time":"1791866322","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"603","server_id":"9000000000000000602","local_type":"1","create_time":"1791866920","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"天气在干嘛"},{"local_id":"604","server_id":"9000000000000000603","local_type":"1","create_time":"1791866994","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅"},{"local_id":"605","server_id":"9000000000000000604","local_type":"1","create_time":"1791867018","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦笑死"},{"local_id":"606","server_id":"9000000000000000605","local_type":"1","create_time":"1791867079","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚上课爱你"},{"local_id":"607","server_id":"9000000000000000606","local_type":"1","create_time":"1791867152","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅几点睡"},{"local_id":"608","server_id":"9000000000000000607","local_type":"1","create_time":"1791867236","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"狗收到"},{"local_id":"609","server_id":"9000000000000000608","local_type":"1","create_time":"1791867611","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚周末"},{"local_id":"610","server_id":"9000000000000000609","local_type":"1","create_time":"1791867620","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈周末出来玩"},{"local_id":"611","server_id":"9000000000000000610","local_type":"1","create_time":"1791867674","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"周末醒了没"},{"local_id":"729","server_id":"9000000000000000728","local_type":"1","create_time":"1791964625","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦上课好耶"},{"local_id":"1","server_id":"9000000000000000000","local_type":"1","create_time":"1791980004","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"☕"},{"local_id":"2","server_id":"9000000000000000001","local_type":"1","create_time":"1791980038","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"出来玩"},{"local_id":"3","server_id":"9000000000000000002","local_type":"1","create_time":"1791980166","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试"},{"local_id":"4","server_id":"9000000000000000003","local_type":"1","create_time":"1791980179","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦下雨几点睡"},{"local_id":"660","server_id":"9000000000000000659","local_type":"1","create_time":"1791992261","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333"},{"local_id":"534","server_id":"9000000000000000533","local_type":"1","create_time":"1791996511","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"535","server_id":"9000000000000000534","local_type":"1","create_time":"1791996643","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好"},{"local_id":"536","server_id":"9000000000000000535","local_type":"1","create_time":"1791996692","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"唱歌"},{"local_id":"236","server_id":"9000000000000000235","local_type":"1","create_time":"1792018683","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气贴贴"},{"local_id":"237","server_id":"9000000000000000236","local_type":"1","create_time":"1792018690","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"吃饭没"},{"local_id":"238","server_id":"9000000000000000237","local_type":"1","create_time":"1792018753","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"几点睡"},{"local_id":"239","server_id":"9000000000000000238","local_type":"1","create_time":"1792018797","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"出来玩"},{"local_id":"240","server_id":"9000000000000000239","local_type":"1","create_time":"1792018862","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"就是说"},{"local_id":"241","server_id":"9000000000000000240","local_type":"1","create_time":"1792018927","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦🤣奶茶冲鸭"},{"local_id":"242","server_id":"9000000000000000241","local_type":"1","create_time":"1792019010","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"作业"},{"local_id":"243","server_id":"9000000000000000242","local_type":"1","create_time":"1792019045","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"猫"},{"local_id":"244","server_id":"9000000000000000243","local_type":"1","create_time":"1792019446","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"醒了没"},{"local_id":"245","server_id":"9000000000000000244","local_type":"1","create_time":"1792019480","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"下雨绝了"},{"local_id":"246","server_id":"9000000000000000245","local_type":"1","create_time":"1792019560","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈"},{"local_id":"247","server_id":"9000000000000000246","local_type":"1","create_time":"1792019854","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦外卖冲鸭"},{"local_id":"248","server_id":"9000000000000000247","local_type":"1","create_time":"1792020166","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"249","server_id":"9000000000000000248","local_type":"1","create_time":"1792020245","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"唱歌亲亲"},{"local_id":"250","server_id":"9000000000000000249","local_type":"1","create_time":"1792020253","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"251","server_id":"9000000000000000250","local_type":"1","create_time":"1792020294","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"睡觉"},{"local_id":"252","server_id":"9000000000000000251","local_type":"1","create_time":"1792020323","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅🍚"},{"local_id":"253","server_id":"9000000000000000252","local_type":"1","create_time":"1792020403","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试困了贴贴"},{"local_id":"254","server_id":"9000000000000000253","local_type":"1","create_time":"1792020493","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"外卖没毛病"},{"local_id":"172","server_id":"9000000000000000171","local_type":"1","create_time":"1792151851","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣睡觉"},{"local_id":"173","server_id":"9000000000000000172","local_type":"1","create_time":"1792151898","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦哈哈哈哈天气"},{"local_id":"174","server_id":"9000000000000000173","local_type":"1","create_time":"1792152387","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"周末"},{"local_id":"175","server_id":"9000000000000000174","local_type":"1","create_time":"1792152462","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死"},{"local_id":"176","server_id":"9000000000000000175","local_type":"3","create_time":"1792152534","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"177","server_id":"9000000000000000176","local_type":"1","create_time":"1792152624","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"猫"},{"local_id":"178","server_id":"9000000000000000177","local_type":"1","create_time":"1792152632","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"☕"},{"local_id":"778","server_id":"9000000000000000777","local_type":"3","create_time":"1792250889","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"779","server_id":"9000000000000000778","local_type":"1","create_time":"1792250897","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦猫那必须的"},{"local_id":"780","server_id":"9000000000000000779","local_type":"1","create_time":"1792250916","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"上课"},{"local_id":"333","server_id":"9000000000000000332","local_type":"1","create_time":"1792258231","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈上课"},{"local_id":"167","server_id":"9000000000000000166","local_type":"1","create_time":"1792268089","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333下雨"},{"local_id":"168","server_id":"9000000000000000167","local_type":"1","create_time":"1792268120","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅那必须的"},{"local_id":"169","server_id":"9000000000000000168","local_type":"1","create_time":"1792268174","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333"},{"local_id":"170","server_id":"9000000000000000169","local_type":"1","create_time":"1792268214","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈考试"},{"local_id":"171","server_id":"9000000000000000170","local_type":"1","create_time":"1792268290","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚睡觉哈哈哈哈"},{"local_id":"526","server_id":"9000000000000000525","local_type":"1","create_time":"1792428881","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"作业"},{"local_id":"527","server_id":"9000000000000000526","local_type":"1","create_time":"1792428935","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"528","server_id":"9000000000000000527","local_type":"1","create_time":"1792428943","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈考试"},{"local_id":"529","server_id":"9000000000000000528","local_type":"1","create_time":"1792428962","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈唱歌就是说亲亲"},{"local_id":"530","server_id":"9000000000000000529","local_type":"1","create_time":"1792428990","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"作业爱你"},{"local_id":"531","server_id":"9000000000000000530","local_type":"1","create_time":"1792429072","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"下雨"},{"local_id":"532","server_id":"9000000000000000531","local_type":"1","create_time":"1792429093","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"吃饭没"},{"local_id":"468","server_id":"9000000000000000467","local_type":"1","create_time":"1792470593","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"469","server_id":"9000000000000000468","local_type":"1","create_time":"1792470671","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"在吗"},{"local_id":"470","server_id":"9000000000000000469","local_type":"1","create_time":"1792470687","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在吗"},{"local_id":"94","server_id":"9000000000000000093","local_type":"1","create_time":"1792483188","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣"},{"local_id":"95","server_id":"9000000000000000094","local_type":"1","create_time":"1792483212","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣逛街"},{"local_id":"96","server_id":"9000000000000000095","local_type":"1","create_time":"1792483220","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死天气"},{"local_id":"97","server_id":"9000000000000000096","local_type":"1","create_time":"1792483281","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333"},{"local_id":"98","server_id":"9000000000000000097","local_type":"3","create_time":"1792483371","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"99","server_id":"9000000000000000098","local_type":"1","create_time":"1792483414","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"回家"},{"local_id":"272","server_id":"9000000000000000271","local_type":"1","create_time":"1792506168","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦奶茶好耶好耶"},{"local_id":"273","server_id":"9000000000000000272","local_type":"1","create_time":"1792506191","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚哈哈哈吃饭没"},{"local_id":"274","server_id":"9000000000000000273","local_type":"1","create_time":"1792506212","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课"},{"local_id":"189","server_id":"9000000000000000188","local_type":"1","create_time":"1792507372","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈逛街"},{"local_id":"190","server_id":"9000000000000000189","local_type":"1","create_time":"1792507397","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好"},{"local_id":"191","server_id":"9000000000000000190","local_type":"1","create_time":"1792507422","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"逛街"},{"local_id":"192","server_id":"9000000000000000191","local_type":"1","create_time":"1792507980","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"唱歌☕"},{"local_id":"193","server_id":"9000000000000000192","local_type":"3","create_time":"1792508010","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"194","server_id":"9000000000000000193","local_type":"1","create_time":"1792508056","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"加班"},{"local_id":"195","server_id":"9000000000000000194","local_type":"1","create_time":"1792508115","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"回家"},{"local_id":"196","server_id":"9000000000000000195","local_type":"1","create_time":"1792508188","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣周末"},{"local_id":"197","server_id":"9000000000000000196","local_type":"1","create_time":"1792508742","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"198","server_id":"9000000000000000197","local_type":"3","create_time":"1792508774","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"199","server_id":"9000000000000000198","local_type":"1","create_time":"1792508824","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"下雨🌙"},{"local_id":"200","server_id":"9000000000000000199","local_type":"1","create_time":"1792508850","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚快递"},{"local_id":"201","server_id":"9000000000000000200","local_type":"1","create_time":"1792508930","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死🤣"},{"local_id":"124","server_id":"9000000000000000123","local_type":"1","create_time":"1792548392","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅"},{"local_id":"125","server_id":"9000000000000000124","local_type":"1","create_time":"1792548425","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"回家绝了"},{"local_id":"126","server_id":"9000000000000000125","local_type":"1","create_time":"1792548485","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂"},{"local_id":"127","server_id":"9000000000000000126","local_type":"1","create_time":"1792548509","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣"},{"local_id":"724","server_id":"9000000000000000723","local_type":"1","create_time":"1792585647","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂2333"},{"local_id":"725","server_id":"9000000000000000724","local_type":"1","create_time":"1792586043","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚哈哈哈"},{"local_id":"726","server_id":"9000000000000000725","local_type":"3","create_time":"1792586049","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"156","server_id":"9000000000000000155","local_type":"1","create_time":"1792597501","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"下雨出来玩早安"},{"local_id":"157","server_id":"9000000000000000156","local_type":"1","create_time":"1792597589","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈困了"},{"local_id":"158","server_id":"9000000000000000157","local_type":"1","create_time":"1792597646","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"159","server_id":"9000000000000000158","local_type":"1","create_time":"1792597723","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅"},{"local_id":"160","server_id":"9000000000000000159","local_type":"1","create_time":"1792597734","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试"},{"local_id":"161","server_id":"9000000000000000160","local_type":"1","create_time":"1792597760","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"冲"},{"local_id":"162","server_id":"9000000000000000161","local_type":"1","create_time":"1792597841","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚鹅鹅鹅猫那必须的"},{"local_id":"163","server_id":"9000000000000000162","local_type":"1","create_time":"1792597846","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"回家😂"},{"local_id":"164","server_id":"9000000000000000163","local_type":"1","create_time":"1792597915","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死猫爱你"},{"local_id":"165","server_id":"9000000000000000164","local_type":"1","create_time":"1792597994","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦困了"},{"local_id":"166","server_id":"9000000000000000165","local_type":"1","create_time":"1792598067","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂"},{"local_id":"262","server_id":"9000000000000000261","local_type":"1","create_time":"1792627318","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"逛街🥰"},{"local_id":"263","server_id":"9000000000000000262","local_type":"1","create_time":"1792627728","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"晚安"},{"local_id":"264","server_id":"9000000000000000263","local_type":"3","create_time":"1792627803","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"265","server_id":"9000000000000000264","local_type":"1","create_time":"1792627870","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"266","server_id":"9000000000000000265","local_type":"1","create_time":"1792627901","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈加班"},{"local_id":"267","server_id":"9000000000000000266","local_type":"1","create_time":"1792627941","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课"},{"local_id":"268","server_id":"9000000000000000267","local_type":"1","create_time":"1792627989","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🥰"},{"local_id":"269","server_id":"9000000000000000268","local_type":"1","create_time":"1792628077","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"电影在干嘛"},{"local_id":"270","server_id":"9000000000000000269","local_type":"1","create_time":"1792628152","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"271","server_id":"9000000000000000270","local_type":"1","create_time":"1792628199","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"回家没毛病"},{"local_id":"31","server_id":"9000000000000000030","local_type":"1","create_time":"1792635220","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚哈哈哈"},{"local_id":"32","server_id":"9000000000000000031","local_type":"1","create_time":"1792635240","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"33","server_id":"9000000000000000032","local_type":"1","create_time":"1792635324","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死🥰"},{"local_id":"34","server_id":"9000000000000000033","local_type":"1","create_time":"1792635380","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚🥰"},{"local_id":"35","server_id":"9000000000000000034","local_type":"1","create_time":"1792635459","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"困了"},{"local_id":"36","server_id":"9000000000000000035","local_type":"1","create_time":"1792635495","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"猫"},{"local_id":"37","server_id":"9000000000000000036","local_type":"1","create_time":"1792635769","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"唱歌真的吗"},{"local_id":"38","server_id":"9000000000000000037","local_type":"1","create_time":"1792635798","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"几点睡"},{"local_id":"39","server_id":"9000000000000000038","local_type":"1","create_time":"1792636026","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课"},{"local_id":"40","server_id":"9000000000000000039","local_type":"1","create_time":"1792636063","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"狗笑死"},{"local_id":"41","server_id":"9000000000000000040","local_type":"1","create_time":"1792636088","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"睡觉"},{"local_id":"42","server_id":"9000000000000000041","local_type":"1","create_time":"1792636131","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"43","server_id":"9000000000000000042","local_type":"1","create_time":"1792636176","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气"},{"local_id":"44","server_id":"9000000000000000043","local_type":"1","create_time":"1792636487","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂"},{"local_id":"45","server_id":"9000000000000000044","local_type":"1","create_time":"1792636569","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂加班🥰"},{"local_id":"46","server_id":"9000000000000000045","local_type":"1","create_time":"1792636649","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333奶茶🌙"},{"local_id":"47","server_id":"9000000000000000046","local_type":"1","create_time":"1792636674","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅"},{"local_id":"48","server_id":"9000000000000000047","local_type":"1","create_time":"1792636702","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈"},{"local_id":"49","server_id":"9000000000000000048","local_type":"1","create_time":"1792636759","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣吃饭"},{"local_id":"50","server_id":"9000000000000000049","local_type":"1","create_time":"1792636837","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"上课"},{"local_id":"51","server_id":"9000000000000000050","local_type":"3","create_time":"1792636857","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"52","server_id":"9000000000000000051","local_type":"1","create_time":"1792636863","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气醒了没"},{"local_id":"53","server_id":"9000000000000000052","local_type":"1","create_time":"1792636896","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死回家"},{"local_id":"54","server_id":"9000000000000000053","local_type":"1","create_time":"1792636954","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣火锅冲鸭"},{"local_id":"431","server_id":"9000000000000000430","local_type":"1","create_time":"1792657460","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"432","server_id":"9000000000000000431","local_type":"1","create_time":"1792657500","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死天气2333"},{"local_id":"433","server_id":"9000000000000000432","local_type":"1","create_time":"1792657561","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"作业"},{"local_id":"434","server_id":"9000000000000000433","local_type":"1","create_time":"1792657628","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🥰"},{"local_id":"435","server_id":"9000000000000000434","local_type":"1","create_time":"1792657678","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课想你"},{"local_id":"436","server_id":"9000000000000000435","local_type":"1","create_time":"1792657763","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333睡觉"},{"local_id":"437","server_id":"9000000000000000436","local_type":"1","create_time":"1792657850","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"逛街"},{"local_id":"21","server_id":"9000000000000000020","local_type":"1","create_time":"1792744823","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死作业"},{"local_id":"138","server_id":"9000000000000000137","local_type":"1","create_time":"1792768080","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"139","server_id":"9000000000000000138","local_type":"1","create_time":"1792768126","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"亲亲"},{"local_id":"232","server_id":"9000000000000000231","local_type":"1","create_time":"1792771545","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈电影"},{"local_id":"233","server_id":"9000000000000000232","local_type":"1","create_time":"1792771605","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"234","server_id":"9000000000000000233","local_type":"1","create_time":"1792771665","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死周末"},{"local_id":"235","server_id":"9000000000000000234","local_type":"1","create_time":"1792771720","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"唱歌"},{"local_id":"661","server_id":"9000000000000000660","local_type":"1","create_time":"1792851320","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"周末"},{"local_id":"202","server_id":"9000000000000000201","local_type":"1","create_time":"1792864702","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"在干嘛"},{"local_id":"203","server_id":"9000000000000000202","local_type":"1","create_time":"1792864784","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈"},{"local_id":"204","server_id":"9000000000000000203","local_type":"1","create_time":"1792864811","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课"},{"local_id":"205","server_id":"9000000000000000204","local_type":"1","create_time":"1792864888","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈周末😘"},{"local_id":"206","server_id":"9000000000000000205","local_type":"1","create_time":"1792864925","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"火锅"},{"local_id":"207","server_id":"9000000000000000206","local_type":"1","create_time":"1792864943","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"加班2333"},{"local_id":"208","server_id":"9000000000000000207","local_type":"1","create_time":"1792864971","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试"},{"local_id":"209","server_id":"9000000000000000208","local_type":"1","create_time":"1792865456","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"逛街早安"},{"local_id":"210","server_id":"9000000000000000209","local_type":"1","create_time":"1792865520","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333没毛病"},{"local_id":"211","server_id":"9000000000000000210","local_type":"1","create_time":"1792865550","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"睡觉贴贴"},{"local_id":"212","server_id":"9000000000000000211","local_type":"1","create_time":"1792865640","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚下雨吃饭没"},{"local_id":"213","server_id":"9000000000000000212","local_type":"1","create_time":"1792866131","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦笑死"},{"local_id":"214","server_id":"9000000000000000213","local_type":"1","create_time":"1792866464","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333困了"},{"local_id":"215","server_id":"9000000000000000214","local_type":"1","create_time":"1792866542","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死"},{"local_id":"216","server_id":"9000000000000000215","local_type":"1","create_time":"1792866777","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333哈哈哈哈"},{"local_id":"217","server_id":"9000000000000000216","local_type":"1","create_time":"1792866855","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333"},{"local_id":"218","server_id":"9000000000000000217","local_type":"1","create_time":"1792867181","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好耶好耶"},{"local_id":"219","server_id":"9000000000000000218","local_type":"1","create_time":"1792867637","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"电影"},{"local_id":"220","server_id":"9000000000000000219","local_type":"1","create_time":"1792867676","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"221","server_id":"9000000000000000220","local_type":"1","create_time":"1792867738","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈外卖心心"},{"local_id":"501","server_id":"9000000000000000500","local_type":"1","create_time":"1792920372","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"502","server_id":"9000000000000000501","local_type":"1","create_time":"1792920391","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"睡觉🥰"},{"local_id":"503","server_id":"9000000000000000502","local_type":"1","create_time":"1792920460","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试"},{"local_id":"504","server_id":"9000000000000000503","local_type":"1","create_time":"1792920502","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈逛街"},{"local_id":"505","server_id":"9000000000000000504","local_type":"1","create_time":"1792920532","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"506","server_id":"9000000000000000505","local_type":"1","create_time":"1792920700","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333🤣"},{"local_id":"507","server_id":"9000000000000000506","local_type":"1","create_time":"1792920729","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈外卖晚安"},{"local_id":"508","server_id":"9000000000000000507","local_type":"1","create_time":"1792920797","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"509","server_id":"9000000000000000508","local_type":"1","create_time":"1792921348","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦😂"},{"local_id":"510","server_id":"9000000000000000509","local_type":"1","create_time":"1792921810","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"加班"},{"local_id":"585","server_id":"9000000000000000584","local_type":"1","create_time":"1792952432","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"586","server_id":"9000000000000000585","local_type":"1","create_time":"1792952483","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚睡觉"},{"local_id":"587","server_id":"9000000000000000586","local_type":"1","create_time":"1792952519","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"588","server_id":"9000000000000000587","local_type":"1","create_time":"1792952570","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"游戏☕"},{"local_id":"589","server_id":"9000000000000000588","local_type":"1","create_time":"1792952595","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"590","server_id":"9000000000000000589","local_type":"1","create_time":"1792952677","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦天气好耶"},{"local_id":"591","server_id":"9000000000000000590","local_type":"1","create_time":"1792952728","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈电影想你"},{"local_id":"592","server_id":"9000000000000000591","local_type":"1","create_time":"1792952780","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂收到"},{"local_id":"593","server_id":"9000000000000000592","local_type":"3","create_time":"1792952860","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"594","server_id":"9000000000000000593","local_type":"1","create_time":"1792952884","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333狗醒了没"},{"local_id":"132","server_id":"9000000000000000131","local_type":"1","create_time":"1793016631","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚逛街真的吗"},{"local_id":"133","server_id":"9000000000000000132","local_type":"1","create_time":"1793016686","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哦"},{"local_id":"134","server_id":"9000000000000000133","local_type":"1","create_time":"1793016775","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"冲"},{"local_id":"135","server_id":"9000000000000000134","local_type":"1","create_time":"1793016844","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦狗冲鸭"},{"local_id":"136","server_id":"9000000000000000135","local_type":"1","create_time":"1793016895","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"343","server_id":"9000000000000000342","local_type":"1","create_time":"1793023925","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333睡觉爱你"},{"local_id":"344","server_id":"9000000000000000343","local_type":"1","create_time":"1793024014","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"加班"},{"local_id":"345","server_id":"9000000000000000344","local_type":"1","create_time":"1793024049","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚作业"},{"local_id":"346","server_id":"9000000000000000345","local_type":"1","create_time":"1793024064","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"作业"},{"local_id":"347","server_id":"9000000000000000346","local_type":"1","create_time":"1793024135","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"狗好耶"},{"local_id":"348","server_id":"9000000000000000347","local_type":"1","create_time":"1793024185","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"349","server_id":"9000000000000000348","local_type":"1","create_time":"1793024252","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"350","server_id":"9000000000000000349","local_type":"1","create_time":"1793024258","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈好耶好耶"},{"local_id":"351","server_id":"9000000000000000350","local_type":"1","create_time":"1793024283","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"352","server_id":"9000000000000000351","local_type":"1","create_time":"1793024334","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"晚安"},{"local_id":"353","server_id":"9000000000000000352","local_type":"1","create_time":"1793024380","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死困了"},{"local_id":"354","server_id":"9000000000000000353","local_type":"1","create_time":"1793024454","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"355","server_id":"9000000000000000354","local_type":"1","create_time":"1793024512","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好"},{"local_id":"356","server_id":"9000000000000000355","local_type":"1","create_time":"1793024564","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"357","server_id":"9000000000000000356","local_type":"1","create_time":"1793024626","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈电影"},{"local_id":"358","server_id":"9000000000000000357","local_type":"1","create_time":"1793024662","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"加班那必须的"},{"local_id":"359","server_id":"9000000000000000358","local_type":"1","create_time":"1793024698","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"奶茶"},{"local_id":"128","server_id":"9000000000000000127","local_type":"1","create_time":"1793037742","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"外卖"},{"local_id":"717","server_id":"9000000000000000716","local_type":"1","create_time":"1793094977","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"上课吃饭没"},{"local_id":"718","server_id":"9000000000000000717","local_type":"1","create_time":"1793095052","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈考试😘"},{"local_id":"719","server_id":"9000000000000000718","local_type":"1","create_time":"1793095611","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333奶茶那必须的"},{"local_id":"720","server_id":"9000000000000000719","local_type":"1","create_time":"1793095635","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"就是说"},{"local_id":"721","server_id":"9000000000000000720","local_type":"1","create_time":"1793095708","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂考试贴贴"},{"local_id":"722","server_id":"9000000000000000721","local_type":"1","create_time":"1793095740","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"游戏贴贴"},{"local_id":"723","server_id":"9000000000000000722","local_type":"1","create_time":"1793096027","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈上课"},{"local_id":"129","server_id":"9000000000000000128","local_type":"1","create_time":"1793119055","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦2333好耶好耶"},{"local_id":"130","server_id":"9000000000000000129","local_type":"1","create_time":"1793119064","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂猫"},{"local_id":"131","server_id":"9000000000000000130","local_type":"1","create_time":"1793119120","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"周末"},{"local_id":"727","server_id":"9000000000000000726","local_type":"3","create_time":"1793126351","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"728","server_id":"9000000000000000727","local_type":"1","create_time":"1793126421","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"游戏困了"},{"local_id":"673","server_id":"9000000000000000672","local_type":"1","create_time":"1793198174","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"真的吗"},{"local_id":"674","server_id":"9000000000000000673","local_type":"1","create_time":"1793198229","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"作业"},{"local_id":"675","server_id":"9000000000000000674","local_type":"1","create_time":"1793198287","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚逛街"},{"local_id":"676","server_id":"9000000000000000675","local_type":"1","create_time":"1793198316","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在干嘛"},{"local_id":"677","server_id":"9000000000000000676","local_type":"1","create_time":"1793198477","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦😂逛街"},{"local_id":"678","server_id":"9000000000000000677","local_type":"3","create_time":"1793198548","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"679","server_id":"9000000000000000678","local_type":"1","create_time":"1793198617","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈🍚"},{"local_id":"680","server_id":"9000000000000000679","local_type":"1","create_time":"1793198701","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚出来玩"},{"local_id":"681","server_id":"9000000000000000680","local_type":"1","create_time":"1793198707","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈睡觉"},{"local_id":"682","server_id":"9000000000000000681","local_type":"1","create_time":"1793198729","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"下雨"},{"local_id":"683","server_id":"9000000000000000682","local_type":"1","create_time":"1793198764","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"684","server_id":"9000000000000000683","local_type":"3","create_time":"1793198836","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"685","server_id":"9000000000000000684","local_type":"1","create_time":"1793198902","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"电影早安"},{"local_id":"686","server_id":"9000000000000000685","local_type":"1","create_time":"1793198920","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"电影爱你"},{"local_id":"687","server_id":"9000000000000000686","local_type":"1","create_time":"1793198941","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好"},{"local_id":"688","server_id":"9000000000000000687","local_type":"1","create_time":"1793199017","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"奶茶"},{"local_id":"689","server_id":"9000000000000000688","local_type":"1","create_time":"1793199088","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好"},{"local_id":"690","server_id":"9000000000000000689","local_type":"3","create_time":"1793199648","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"691","server_id":"9000000000000000690","local_type":"1","create_time":"1793199670","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在吗"},{"local_id":"293","server_id":"9000000000000000292","local_type":"1","create_time":"1793206751","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在干嘛"},{"local_id":"494","server_id":"9000000000000000493","local_type":"1","create_time":"1793249566","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气救命"},{"local_id":"495","server_id":"9000000000000000494","local_type":"1","create_time":"1793249601","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦嗯嗯"},{"local_id":"496","server_id":"9000000000000000495","local_type":"1","create_time":"1793249651","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚🤣下雨亲亲"},{"local_id":"497","server_id":"9000000000000000496","local_type":"1","create_time":"1793249658","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"救命"},{"local_id":"498","server_id":"9000000000000000497","local_type":"1","create_time":"1793249719","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈外卖"},{"local_id":"499","server_id":"9000000000000000498","local_type":"1","create_time":"1793250111","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"500","server_id":"9000000000000000499","local_type":"1","create_time":"1793250140","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"爱你"},{"local_id":"537","server_id":"9000000000000000536","local_type":"1","create_time":"1793298975","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"538","server_id":"9000000000000000537","local_type":"1","create_time":"1793299025","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦🤣上课2333"},{"local_id":"762","server_id":"9000000000000000761","local_type":"1","create_time":"1793364972","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333想你"},{"local_id":"763","server_id":"9000000000000000762","local_type":"1","create_time":"1793365035","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"唱歌收到"},{"local_id":"539","server_id":"9000000000000000538","local_type":"3","create_time":"1793366954","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"540","server_id":"9000000000000000539","local_type":"1","create_time":"1793367039","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"541","server_id":"9000000000000000540","local_type":"3","create_time":"1793367101","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"542","server_id":"9000000000000000541","local_type":"3","create_time":"1793367161","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"543","server_id":"9000000000000000542","local_type":"1","create_time":"1793367208","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂奶茶"},{"local_id":"544","server_id":"9000000000000000543","local_type":"1","create_time":"1793367273","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哦"},{"local_id":"545","server_id":"9000000000000000544","local_type":"1","create_time":"1793367316","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333"},{"local_id":"546","server_id":"9000000000000000545","local_type":"1","create_time":"1793367377","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课"},{"local_id":"547","server_id":"9000000000000000546","local_type":"1","create_time":"1793367552","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈周末醒了没"},{"local_id":"548","server_id":"9000000000000000547","local_type":"1","create_time":"1793367562","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"狗在干嘛"},{"local_id":"549","server_id":"9000000000000000548","local_type":"1","create_time":"1793367642","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"加班"},{"local_id":"550","server_id":"9000000000000000549","local_type":"1","create_time":"1793367712","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死几点睡"},{"local_id":"551","server_id":"9000000000000000550","local_type":"1","create_time":"1793367779","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚那必须的"},{"local_id":"552","server_id":"9000000000000000551","local_type":"1","create_time":"1793367802","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"周末"},{"local_id":"553","server_id":"9000000000000000552","local_type":"1","create_time":"1793367929","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"睡觉绝了"},{"local_id":"554","server_id":"9000000000000000553","local_type":"1","create_time":"1793367948","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333外卖"},{"local_id":"555","server_id":"9000000000000000554","local_type":"1","create_time":"1793367994","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🥰"},{"local_id":"556","server_id":"9000000000000000555","local_type":"1","create_time":"1793368237","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"电影"},{"local_id":"557","server_id":"9000000000000000556","local_type":"1","create_time":"1793368277","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅"},{"local_id":"558","server_id":"9000000000000000557","local_type":"1","create_time":"1793368690","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"559","server_id":"9000000000000000558","local_type":"1","create_time":"1793368727","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"狗收到亲亲"},{"local_id":"255","server_id":"9000000000000000254","local_type":"1","create_time":"1793372270","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂晚安"},{"local_id":"256","server_id":"9000000000000000255","local_type":"1","create_time":"1793372359","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"逛街"},{"local_id":"257","server_id":"9000000000000000256","local_type":"1","create_time":"1793372431","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"258","server_id":"9000000000000000257","local_type":"1","create_time":"1793372480","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"逛街"},{"local_id":"259","server_id":"9000000000000000258","local_type":"1","create_time":"1793372563","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333狗"},{"local_id":"260","server_id":"9000000000000000259","local_type":"1","create_time":"1793372714","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚快递困了"},{"local_id":"261","server_id":"9000000000000000260","local_type":"1","create_time":"1793372723","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂"},{"local_id":"19","server_id":"9000000000000000018","local_type":"1","create_time":"1793383980","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅"},{"local_id":"20","server_id":"9000000000000000019","local_type":"1","create_time":"1793383986","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"下雨"},{"local_id":"408","server_id":"9000000000000000407","local_type":"1","create_time":"1793427968","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦笑死收到"},{"local_id":"409","server_id":"9000000000000000408","local_type":"1","create_time":"1793428052","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚考试"},{"local_id":"410","server_id":"9000000000000000409","local_type":"1","create_time":"1793428071","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"狗"},{"local_id":"411","server_id":"9000000000000000410","local_type":"1","create_time":"1793428141","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"412","server_id":"9000000000000000411","local_type":"1","create_time":"1793428177","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣火锅救命"},{"local_id":"413","server_id":"9000000000000000412","local_type":"1","create_time":"1793428187","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"414","server_id":"9000000000000000413","local_type":"1","create_time":"1793428225","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"下雨真的吗"},{"local_id":"415","server_id":"9000000000000000414","local_type":"1","create_time":"1793428263","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333"},{"local_id":"416","server_id":"9000000000000000415","local_type":"1","create_time":"1793428301","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"作业没毛病"},{"local_id":"417","server_id":"9000000000000000416","local_type":"3","create_time":"1793428728","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"418","server_id":"9000000000000000417","local_type":"1","create_time":"1793428735","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"睡觉冲"},{"local_id":"419","server_id":"9000000000000000418","local_type":"1","create_time":"1793428782","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚笑死"},{"local_id":"667","server_id":"9000000000000000666","local_type":"1","create_time":"1793459459","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"回家出来玩"},{"local_id":"668","server_id":"9000000000000000667","local_type":"1","create_time":"1793459467","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"669","server_id":"9000000000000000668","local_type":"1","create_time":"1793459663","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课"},{"local_id":"670","server_id":"9000000000000000669","local_type":"3","create_time":"1793459738","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"671","server_id":"9000000000000000670","local_type":"1","create_time":"1793459986","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哦"},{"local_id":"672","server_id":"9000000000000000671","local_type":"1","create_time":"1793460046","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"736","server_id":"9000000000000000735","local_type":"1","create_time":"1793556545","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅火锅"},{"local_id":"737","server_id":"9000000000000000736","local_type":"1","create_time":"1793556602","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦回家"},{"local_id":"738","server_id":"9000000000000000737","local_type":"1","create_time":"1793556659","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"火锅"},{"local_id":"739","server_id":"9000000000000000738","local_type":"1","create_time":"1793556669","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈"},{"local_id":"30","server_id":"9000000000000000029","local_type":"1","create_time":"1793558103","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"睡觉绝了"},{"local_id":"179","server_id":"9000000000000000178","local_type":"1","create_time":"1793646102","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"180","server_id":"9000000000000000179","local_type":"1","create_time":"1793646130","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"贴贴宝贝"},{"local_id":"181","server_id":"9000000000000000180","local_type":"1","create_time":"1793646178","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"猫嗯嗯"},{"local_id":"462","server_id":"9000000000000000461","local_type":"1","create_time":"1793710030","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚😂"},{"local_id":"463","server_id":"9000000000000000462","local_type":"1","create_time":"1793710035","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"在吗"},{"local_id":"464","server_id":"9000000000000000463","local_type":"1","create_time":"1793710079","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"下雨"},{"local_id":"465","server_id":"9000000000000000464","local_type":"1","create_time":"1793710165","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯嗯"},{"local_id":"466","server_id":"9000000000000000465","local_type":"1","create_time":"1793710203","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试"},{"local_id":"467","server_id":"9000000000000000466","local_type":"1","create_time":"1793710288","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"爱你"},{"local_id":"640","server_id":"9000000000000000639","local_type":"1","create_time":"1793809796","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣睡觉"},{"local_id":"641","server_id":"9000000000000000640","local_type":"1","create_time":"1793809812","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"唱歌"},{"local_id":"642","server_id":"9000000000000000641","local_type":"1","create_time":"1793809842","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课冲"},{"local_id":"643","server_id":"9000000000000000642","local_type":"1","create_time":"1793810390","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"电影在干嘛"},{"local_id":"644","server_id":"9000000000000000643","local_type":"1","create_time":"1793810520","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"考试"},{"local_id":"645","server_id":"9000000000000000644","local_type":"1","create_time":"1793810590","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好"},{"local_id":"5","server_id":"9000000000000000004","local_type":"3","create_time":"1793853510","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"6","server_id":"9000000000000000005","local_type":"1","create_time":"1793853550","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣"},{"local_id":"751","server_id":"9000000000000000750","local_type":"1","create_time":"1793900079","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死😘"},{"local_id":"752","server_id":"9000000000000000751","local_type":"1","create_time":"1793900165","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂"},{"local_id":"753","server_id":"9000000000000000752","local_type":"3","create_time":"1793900178","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"754","server_id":"9000000000000000753","local_type":"1","create_time":"1793900244","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"755","server_id":"9000000000000000754","local_type":"1","create_time":"1793900280","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈考试"},{"local_id":"756","server_id":"9000000000000000755","local_type":"1","create_time":"1793900332","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"游戏"},{"local_id":"757","server_id":"9000000000000000756","local_type":"1","create_time":"1793900380","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死"},{"local_id":"758","server_id":"9000000000000000757","local_type":"1","create_time":"1793900465","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚鹅鹅鹅爱你"},{"local_id":"759","server_id":"9000000000000000758","local_type":"1","create_time":"1793900481","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"周末🍚"},{"local_id":"760","server_id":"9000000000000000759","local_type":"1","create_time":"1793900536","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"761","server_id":"9000000000000000760","local_type":"1","create_time":"1793900598","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"奶茶"},{"local_id":"522","server_id":"9000000000000000521","local_type":"1","create_time":"1793900706","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"快递救命"},{"local_id":"523","server_id":"9000000000000000522","local_type":"1","create_time":"1793900760","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🌙"},{"local_id":"524","server_id":"9000000000000000523","local_type":"1","create_time":"1793900816","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死"},{"local_id":"525","server_id":"9000000000000000524","local_type":"1","create_time":"1793900889","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅"},{"local_id":"154","server_id":"9000000000000000153","local_type":"1","create_time":"1793928909","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚快递早安"},{"local_id":"155","server_id":"9000000000000000154","local_type":"1","create_time":"1793928981","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课冲"},{"local_id":"226","server_id":"9000000000000000225","local_type":"1","create_time":"1793929425","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死😂心心"},{"local_id":"227","server_id":"9000000000000000226","local_type":"1","create_time":"1793929436","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在吗"},{"local_id":"228","server_id":"9000000000000000227","local_type":"1","create_time":"1793930031","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦笑死"},{"local_id":"229","server_id":"9000000000000000228","local_type":"1","create_time":"1793930103","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"天气"},{"local_id":"230","server_id":"9000000000000000229","local_type":"1","create_time":"1793930108","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🥰"},{"local_id":"152","server_id":"9000000000000000151","local_type":"1","create_time":"1793985915","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好"},{"local_id":"153","server_id":"9000000000000000152","local_type":"1","create_time":"1793985965","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅🌙"},{"local_id":"55","server_id":"9000000000000000054","local_type":"1","create_time":"1793991668","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"56","server_id":"9000000000000000055","local_type":"1","create_time":"1793992266","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🌙"},{"local_id":"533","server_id":"9000000000000000532","local_type":"1","create_time":"1794033453","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"作业"},{"local_id":"595","server_id":"9000000000000000594","local_type":"3","create_time":"1794073459","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"596","server_id":"9000000000000000595","local_type":"1","create_time":"1794073485","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"周末"},{"local_id":"597","server_id":"9000000000000000596","local_type":"1","create_time":"1794073535","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"上课出来玩"},{"local_id":"598","server_id":"9000000000000000597","local_type":"1","create_time":"1794073618","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"想你"},{"local_id":"599","server_id":"9000000000000000598","local_type":"1","create_time":"1794074159","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"下雨2333"},{"local_id":"600","server_id":"9000000000000000599","local_type":"1","create_time":"1794074199","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂天气想你"},{"local_id":"601","server_id":"9000000000000000600","local_type":"1","create_time":"1794074492","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂冲"},{"local_id":"566","server_id":"9000000000000000565","local_type":"1","create_time":"1794128212","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"上课嗯嗯爱你"},{"local_id":"567","server_id":"9000000000000000566","local_type":"1","create_time":"1794128502","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈就是说"},{"local_id":"582","server_id":"9000000000000000581","local_type":"1","create_time":"1794130848","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"没毛病"},{"local_id":"583","server_id":"9000000000000000582","local_type":"1","create_time":"1794130915","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死🥰"},{"local_id":"584","server_id":"9000000000000000583","local_type":"1","create_time":"1794130991","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"奶茶🥰心心"},{"local_id":"743","server_id":"9000000000000000742","local_type":"1","create_time":"1794186280","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哦"},{"local_id":"744","server_id":"9000000000000000743","local_type":"1","create_time":"1794186300","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"745","server_id":"9000000000000000744","local_type":"1","create_time":"1794186653","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"游戏"},{"local_id":"746","server_id":"9000000000000000745","local_type":"1","create_time":"1794186664","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣嗯嗯"},{"local_id":"747","server_id":"9000000000000000746","local_type":"1","create_time":"1794186708","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🌙"},{"local_id":"748","server_id":"9000000000000000747","local_type":"1","create_time":"1794186736","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"下雨"},{"local_id":"749","server_id":"9000000000000000748","local_type":"1","create_time":"1794186759","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂冲"},{"local_id":"750","server_id":"9000000000000000749","local_type":"1","create_time":"1794186794","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚😂猫"},{"local_id":"712","server_id":"9000000000000000711","local_type":"1","create_time":"1794195282","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦🌙"},{"local_id":"713","server_id":"9000000000000000712","local_type":"1","create_time":"1794195557","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚逛街🍚"},{"local_id":"714","server_id":"9000000000000000713","local_type":"1","create_time":"1794195640","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"快递🌙"},{"local_id":"715","server_id":"9000000000000000714","local_type":"1","create_time":"1794195859","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🍚"},{"local_id":"716","server_id":"9000000000000000715","local_type":"1","create_time":"1794195983","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"吃饭"},{"local_id":"568","server_id":"9000000000000000567","local_type":"1","create_time":"1794211057","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"569","server_id":"9000000000000000568","local_type":"1","create_time":"1794211098","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"绝了"},{"local_id":"570","server_id":"9000000000000000569","local_type":"1","create_time":"1794211140","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"嗯"},{"local_id":"18","server_id":"9000000000000000017","local_type":"1","create_time":"1794211353","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"唱歌在干嘛"},{"local_id":"182","server_id":"9000000000000000181","local_type":"1","create_time":"1794240619","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"睡觉那必须的"},{"local_id":"183","server_id":"9000000000000000182","local_type":"1","create_time":"1794240672","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"就是说"},{"local_id":"184","server_id":"9000000000000000183","local_type":"1","create_time":"1794240709","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"游戏"},{"local_id":"185","server_id":"9000000000000000184","local_type":"1","create_time":"1794241023","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚加班🍚"},{"local_id":"186","server_id":"9000000000000000185","local_type":"1","create_time":"1794241041","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"187","server_id":"9000000000000000186","local_type":"1","create_time":"1794241130","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"唱歌"},{"local_id":"188","server_id":"9000000000000000187","local_type":"1","create_time":"1794241181","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚2333下雨😂"},{"local_id":"394","server_id":"9000000000000000393","local_type":"1","create_time":"1794248927","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"醒了没"},{"local_id":"740","server_id":"9000000000000000739","local_type":"1","create_time":"1794248979","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"上课哈哈哈哈"},{"local_id":"741","server_id":"9000000000000000740","local_type":"1","create_time":"1794248999","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈上课"},{"local_id":"742","server_id":"9000000000000000741","local_type":"3","create_time":"1794249162","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"395","server_id":"9000000000000000394","local_type":"1","create_time":"1794249238","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"396","server_id":"9000000000000000395","local_type":"1","create_time":"1794249300","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🍚"},{"local_id":"397","server_id":"9000000000000000396","local_type":"1","create_time":"1794249322","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅猫吃饭没"},{"local_id":"398","server_id":"9000000000000000397","local_type":"1","create_time":"1794249404","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"周末没毛病"},{"local_id":"399","server_id":"9000000000000000398","local_type":"1","create_time":"1794249414","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死下雨"},{"local_id":"400","server_id":"9000000000000000399","local_type":"1","create_time":"1794249470","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅加班宝贝"},{"local_id":"401","server_id":"9000000000000000400","local_type":"1","create_time":"1794249483","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦哈哈哈睡觉早安"},{"local_id":"402","server_id":"9000000000000000401","local_type":"1","create_time":"1794249542","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"下雨晚安"},{"local_id":"403","server_id":"9000000000000000402","local_type":"1","create_time":"1794249627","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂猫贴贴"},{"local_id":"404","server_id":"9000000000000000403","local_type":"1","create_time":"1794250193","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"吃饭晚安"},{"local_id":"405","server_id":"9000000000000000404","local_type":"1","create_time":"1794250274","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"吃饭没"},{"local_id":"406","server_id":"9000000000000000405","local_type":"1","create_time":"1794250801","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"游戏"},{"local_id":"407","server_id":"9000000000000000406","local_type":"1","create_time":"1794250852","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死作业"},{"local_id":"730","server_id":"9000000000000000729","local_type":"1","create_time":"1794273825","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"731","server_id":"9000000000000000730","local_type":"1","create_time":"1794273883","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦哈哈哈哈火锅☕"},{"local_id":"732","server_id":"9000000000000000731","local_type":"1","create_time":"1794273946","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"早安"},{"local_id":"733","server_id":"9000000000000000732","local_type":"1","create_time":"1794274003","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈"},{"local_id":"734","server_id":"9000000000000000733","local_type":"1","create_time":"1794274048","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"735","server_id":"9000000000000000734","local_type":"1","create_time":"1794274090","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"2333"},{"local_id":"612","server_id":"9000000000000000611","local_type":"1","create_time":"1794319838","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"613","server_id":"9000000000000000612","local_type":"1","create_time":"1794319846","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"614","server_id":"9000000000000000613","local_type":"1","create_time":"1794319896","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅快递"},{"local_id":"615","server_id":"9000000000000000614","local_type":"1","create_time":"1794319936","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死哈哈哈哈心心"},{"local_id":"616","server_id":"9000000000000000615","local_type":"1","create_time":"1794320001","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"617","server_id":"9000000000000000616","local_type":"1","create_time":"1794320047","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"回家"},{"local_id":"618","server_id":"9000000000000000617","local_type":"1","create_time":"1794320305","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"睡觉想你"},{"local_id":"619","server_id":"9000000000000000618","local_type":"1","create_time":"1794320354","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚睡觉好耶"},{"local_id":"620","server_id":"9000000000000000619","local_type":"1","create_time":"1794320363","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🌙"},{"local_id":"621","server_id":"9000000000000000620","local_type":"1","create_time":"1794320397","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣天气"},{"local_id":"622","server_id":"9000000000000000621","local_type":"1","create_time":"1794320460","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈哈"},{"local_id":"623","server_id":"9000000000000000622","local_type":"1","create_time":"1794320468","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"火锅"},{"local_id":"624","server_id":"9000000000000000623","local_type":"1","create_time":"1794320482","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"游戏"},{"local_id":"625","server_id":"9000000000000000624","local_type":"1","create_time":"1794320860","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅考试"},{"local_id":"626","server_id":"9000000000000000625","local_type":"1","create_time":"1794320940","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"笑死就是说"},{"local_id":"627","server_id":"9000000000000000626","local_type":"1","create_time":"1794321004","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"快递"},{"local_id":"628","server_id":"9000000000000000627","local_type":"1","create_time":"1794321019","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣出来玩"},{"local_id":"629","server_id":"9000000000000000628","local_type":"1","create_time":"1794321139","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"好"},{"local_id":"630","server_id":"9000000000000000629","local_type":"1","create_time":"1794321159","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈"},{"local_id":"631","server_id":"9000000000000000630","local_type":"1","create_time":"1794321201","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂醒了没"},{"local_id":"632","server_id":"9000000000000000631","local_type":"1","create_time":"1794321284","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"唱歌谁懂啊"},{"local_id":"389","server_id":"9000000000000000388","local_type":"1","create_time":"1794336185","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"游戏"},{"local_id":"390","server_id":"9000000000000000389","local_type":"1","create_time":"1794336603","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"鹅鹅鹅吃饭没"},{"local_id":"391","server_id":"9000000000000000390","local_type":"1","create_time":"1794336613","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"外卖吃饭没"},{"local_id":"392","server_id":"9000000000000000391","local_type":"1","create_time":"1794336751","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"收到"},{"local_id":"393","server_id":"9000000000000000392","local_type":"1","create_time":"1794336823","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"游戏收到"},{"local_id":"775","server_id":"9000000000000000774","local_type":"1","create_time":"1794373514","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"逛街谁懂啊"},{"local_id":"776","server_id":"9000000000000000775","local_type":"1","create_time":"1794373590","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"冲鸭"},{"local_id":"777","server_id":"9000000000000000776","local_type":"1","create_time":"1794373619","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"游戏"},{"local_id":"294","server_id":"9000000000000000293","local_type":"1","create_time":"1794390108","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚2333猫"},{"local_id":"295","server_id":"9000000000000000294","local_type":"1","create_time":"1794390190","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😘"},{"local_id":"296","server_id":"9000000000000000295","local_type":"1","create_time":"1794390270","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哦"},{"local_id":"297","server_id":"9000000000000000296","local_type":"1","create_time":"1794390340","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"狗🥰"},{"local_id":"298","server_id":"9000000000000000297","local_type":"1","create_time":"1794390371","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"游戏🥰"},{"local_id":"299","server_id":"9000000000000000298","local_type":"1","create_time":"1794390402","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣猫"},{"local_id":"300","server_id":"9000000000000000299","local_type":"1","create_time":"1794390596","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂狗"},{"local_id":"301","server_id":"9000000000000000300","local_type":"1","create_time":"1794390603","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"外卖2333"},{"local_id":"302","server_id":"9000000000000000301","local_type":"1","create_time":"1794390679","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"303","server_id":"9000000000000000302","local_type":"1","create_time":"1794390769","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"304","server_id":"9000000000000000303","local_type":"1","create_time":"1794390821","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"火锅"},{"local_id":"305","server_id":"9000000000000000304","local_type":"1","create_time":"1794390886","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"外卖"},{"local_id":"306","server_id":"9000000000000000305","local_type":"1","create_time":"1794390894","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"回家"},{"local_id":"307","server_id":"9000000000000000306","local_type":"1","create_time":"1794390974","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333加班绝了"},{"local_id":"308","server_id":"9000000000000000307","local_type":"1","create_time":"1794391032","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"😂周末"},{"local_id":"309","server_id":"9000000000000000308","local_type":"1","create_time":"1794391073","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"回家"},{"local_id":"310","server_id":"9000000000000000309","local_type":"1","create_time":"1794391151","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"作业"},{"local_id":"311","server_id":"9000000000000000310","local_type":"1","create_time":"1794391185","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦回家爱你"},{"local_id":"312","server_id":"9000000000000000311","local_type":"1","create_time":"1794391265","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣那必须的"},{"local_id":"313","server_id":"9000000000000000312","local_type":"1","create_time":"1794391297","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"下雨"},{"local_id":"314","server_id":"9000000000000000313","local_type":"1","create_time":"1794391363","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在吗"},{"local_id":"315","server_id":"9000000000000000314","local_type":"1","create_time":"1794391393","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"那必须的"},{"local_id":"316","server_id":"9000000000000000315","local_type":"1","create_time":"1794391434","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333晚安"},{"local_id":"697","server_id":"9000000000000000696","local_type":"1","create_time":"1794396271","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"奶茶爱你"},{"local_id":"659","server_id":"9000000000000000658","local_type":"1","create_time":"1794442967","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"天气"},{"local_id":"420","server_id":"9000000000000000419","local_type":"1","create_time":"1794443732","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣电影贴贴"},{"local_id":"421","server_id":"9000000000000000420","local_type":"1","create_time":"1794444186","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死"},{"local_id":"422","server_id":"9000000000000000421","local_type":"1","create_time":"1794444274","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"2333猫"},{"local_id":"423","server_id":"9000000000000000422","local_type":"3","create_time":"1794444333","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"424","server_id":"9000000000000000423","local_type":"1","create_time":"1794444529","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"鹅鹅鹅考试"},{"local_id":"425","server_id":"9000000000000000424","local_type":"1","create_time":"1794444555","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"426","server_id":"9000000000000000425","local_type":"1","create_time":"1794444916","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"逛街好耶"},{"local_id":"427","server_id":"9000000000000000426","local_type":"1","create_time":"1794444961","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"在吗"},{"local_id":"428","server_id":"9000000000000000427","local_type":"1","create_time":"1794444983","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"上课"},{"local_id":"429","server_id":"9000000000000000428","local_type":"1","create_time":"1794445477","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"狗晚安"},{"local_id":"430","server_id":"9000000000000000429","local_type":"1","create_time":"1794445904","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哦"},{"local_id":"291","server_id":"9000000000000000290","local_type":"1","create_time":"1794550229","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"火锅绝了"},{"local_id":"292","server_id":"9000000000000000291","local_type":"1","create_time":"1794550297","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"438","server_id":"9000000000000000437","local_type":"1","create_time":"1794552181","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"狗"},{"local_id":"439","server_id":"9000000000000000438","local_type":"1","create_time":"1794552604","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"冲"},{"local_id":"440","server_id":"9000000000000000439","local_type":"1","create_time":"1794552639","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦电影"},{"local_id":"441","server_id":"9000000000000000440","local_type":"1","create_time":"1794552673","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈狗"},{"local_id":"442","server_id":"9000000000000000441","local_type":"1","create_time":"1794552729","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"😂睡觉🥰"},{"local_id":"443","server_id":"9000000000000000442","local_type":"1","create_time":"1794552755","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"笑死狗爱你"},{"local_id":"444","server_id":"9000000000000000443","local_type":"1","create_time":"1794552820","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚"},{"local_id":"445","server_id":"9000000000000000444","local_type":"1","create_time":"1794552896","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦回家"},{"local_id":"446","server_id":"9000000000000000445","local_type":"1","create_time":"1794552914","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"作业好耶好耶"},{"local_id":"447","server_id":"9000000000000000446","local_type":"1","create_time":"1794552960","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"哈哈哈哈睡觉几点睡"},{"local_id":"448","server_id":"9000000000000000447","local_type":"3","create_time":"1794553046","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"449","server_id":"9000000000000000448","local_type":"1","create_time":"1794553072","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"好"},{"local_id":"450","server_id":"9000000000000000449","local_type":"1","create_time":"1794553156","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"睡觉没毛病"},{"local_id":"451","server_id":"9000000000000000450","local_type":"1","create_time":"1794553422","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚奶茶早安"},{"local_id":"452","server_id":"9000000000000000451","local_type":"1","create_time":"1794553461","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哦"},{"local_id":"453","server_id":"9000000000000000452","local_type":"1","create_time":"1794553473","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"唱歌冲"},{"local_id":"454","server_id":"9000000000000000453","local_type":"1","create_time":"1794553560","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"哈哈哈狗2333"},{"local_id":"455","server_id":"9000000000000000454","local_type":"1","create_time":"1794553592","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"狗"},{"local_id":"456","server_id":"9000000000000000455","local_type":"1","create_time":"1794553654","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"在吗"},{"local_id":"457","server_id":"9000000000000000456","local_type":"1","create_time":"1794553693","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"阿晚外卖"},{"local_id":"458","server_id":"9000000000000000457","local_type":"1","create_time":"1794553739","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"救命"},{"local_id":"459","server_id":"9000000000000000458","local_type":"1","create_time":"1794553820","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"🤣外卖早安"},{"local_id":"460","server_id":"9000000000000000459","local_type":"1","create_time":"1794553833","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"☕"},{"local_id":"461","server_id":"9000000000000000460","local_type":"1","create_time":"1794553866","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"嗯"},{"local_id":"140","server_id":"9000000000000000139","local_type":"1","create_time":"1794563981","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"考试"},{"local_id":"141","server_id":"9000000000000000140","local_type":"1","create_time":"1794564023","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦"},{"local_id":"142","server_id":"9000000000000000141","local_type":"1","create_time":"1794564091","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"🤣吃饭"},{"local_id":"143","server_id":"9000000000000000142","local_type":"1","create_time":"1794564108","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"电影冲鸭"},{"local_id":"144","server_id":"9000000000000000143","local_type":"3","create_time":"1794564124","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":null},{"local_id":"662","server_id":"9000000000000000661","local_type":"1","create_time":"1794582825","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"猫"},{"local_id":"663","server_id":"9000000000000000662","local_type":"1","create_time":"1794582871","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦天气"},{"local_id":"664","server_id":"9000000000000000663","local_type":"1","create_time":"1794582899","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"下雨好耶好耶"},{"local_id":"693","server_id":"9000000000000000692","local_type":"3","create_time":"1794612077","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":null},{"local_id":"694","server_id":"9000000000000000693","local_type":"1","create_time":"1794612157","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"小曦考试☕"},{"local_id":"695","server_id":"9000000000000000694","local_type":"1","create_time":"1794612209","sender_id":"wxid_demo_bbbbbb22","from_self":null,"text":"游戏收到"},{"local_id":"696","server_id":"9000000000000000695","local_type":"1","create_time":"1794612292","sender_id":"wxid_demo_aaaaaa22","from_self":null,"text":"出来玩"}];
+
+</script>
+<script>
+var App = (function () {
+  'use strict';
+
+  var state = {
+    parsed: null,      // Engine.parseInput 结果
+    myKey: null,
+    report: null,
+    posterDataURL: '',
+    slide: 0,
+    slideCount: 0,
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function toast(msg) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { t.style.display = 'none'; }, 2200);
+  }
+
+  /* ---------- 视图切换 ---------- */
+  function go(name) {
+    var views = document.querySelectorAll('.view');
+    for (var i = 0; i < views.length; i++) views[i].classList.remove('active');
+    $('view-' + name).classList.add('active');
+    window.scrollTo(0, 0);
+    if (name === 'home') {
+      $('import-step1').classList.remove('hidden');
+      $('import-step2').classList.add('hidden');
+      state.parsed = null;
+      state.myKey = null;
+      state.report = null;
+    }
+  }
+
+  /* ---------- 演示数据 ---------- */
+  function trySample() {
+    var res = Engine.parseInput(SAMPLE_DATA);
+    if (res.error) { toast('演示数据加载失败'); return; }
+    var myKey = Engine.guessMe(res.msgs) || res.meta.senderIds[0];
+    state.report = Engine.analyze(res.msgs, {
+      myKey: myKey,
+      meName: '阿晚',
+      friendName: '小曦',
+    });
+    renderReport(state.report);
+    go('report');
+  }
+
+  /* ---------- 导入：文件 ---------- */
+  var dz = $('drop-zone');
+  var fileInput = $('file-input');
+  dz.addEventListener('click', function () { fileInput.click(); });
+  fileInput.addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (f) readFile(f);
+    fileInput.value = '';
+  });
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) {
+      e.preventDefault();
+      dz.classList.add('drag');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) {
+      e.preventDefault();
+      dz.classList.remove('drag');
+    });
+  });
+  dz.addEventListener('drop', function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) readFile(f);
+  });
+  function readFile(f) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      $('paste-area').value = String(reader.result || '');
+      parse();
+    };
+    reader.onerror = function () { toast('读取文件失败'); };
+    reader.readAsText(f, 'utf-8');
+  }
+
+  /* ---------- 导入：解析 + 身份确认 ---------- */
+  function parse() {
+    var text = $('paste-area').value;
+    var errBox = $('import-error');
+    errBox.textContent = '';
+    if (!text.trim()) { errBox.textContent = '请先选择文件或粘贴聊天记录内容'; return; }
+    var res = Engine.parseInput(text);
+    if (res.error) { errBox.textContent = res.error; return; }
+    state.parsed = res;
+    var meta = res.meta;
+    var myKey = null, meName = '我', friendName = 'TA';
+    var options = [];
+    if (meta.type === 'txt') {
+      var role = Engine.guessTxtRole(meta.senderIds);
+      options = meta.senderIds.map(function (k, i) {
+        return { key: k, label: k, count: meta.counts[k] };
+      });
+      if (role.me) myKey = role.me;
+      if (role.friend) {
+        friendName = (role.friend === '她' || role.friend === '他') ? 'TA' : role.friend;
+      }
+      if (meta.header) {
+        var parts = meta.header.split(/[×xX]/).map(function (s) { return s.trim(); }).filter(Boolean);
+        if (parts.length >= 2) {
+          if (meName === '我') meName = parts[0];
+          friendName = parts[1];
+        }
+      }
+    } else {
+      options = meta.senderIds.map(function (k, i) {
+        return { key: k, label: '发送者' + (i + 1), count: meta.counts[k] };
+      });
+      myKey = Engine.guessMe(res.msgs);
+    }
+    state.myKey = myKey;
+    $('sender-count').textContent = String(options.length);
+    $('import-summary').textContent =
+      '共 ' + res.msgs.length + ' 条消息。请点选哪一位是「我」：';
+    var html = '';
+    for (var i = 0; i < options.length; i++) {
+      var o = options[i];
+      var isMe = (myKey === o.key);
+      html += '<div class="sender-row' + (isMe ? ' active' : '') + '" data-key="' + esc(o.key) + '" onclick="App.pickMe(this)">'
+        + '<span class="radio">' + (isMe ? '●' : '○') + '</span>'
+        + '<span class="sender-info"><span class="sender-label">' + esc(o.label) + '</span>'
+        + '<br><span class="sender-count">' + o.count + ' 条消息</span></span>'
+        + '<span class="role-tag' + (isMe ? ' me' : '') + '">' + (isMe ? '👤 我' : '❤️ TA') + '</span></div>';
+    }
+    $('sender-list').innerHTML = html;
+    $('me-name').value = meName;
+    $('friend-name').value = friendName;
+    $('import-step1').classList.add('hidden');
+    $('import-step2').classList.remove('hidden');
+    window.scrollTo(0, 0);
+  }
+
+  function pickMe(el) {
+    state.myKey = el.getAttribute('data-key');
+    var rows = $('sender-list').querySelectorAll('.sender-row');
+    for (var i = 0; i < rows.length; i++) {
+      var isMe = rows[i].getAttribute('data-key') === state.myKey;
+      rows[i].classList.toggle('active', isMe);
+      rows[i].querySelector('.radio').textContent = isMe ? '●' : '○';
+      var tag = rows[i].querySelector('.role-tag');
+      tag.textContent = isMe ? '👤 我' : '❤️ TA';
+      tag.classList.toggle('me', isMe);
+    }
+  }
+
+  function resetImport() {
+    state.parsed = null;
+    state.myKey = null;
+    $('import-step2').classList.add('hidden');
+    $('import-step1').classList.remove('hidden');
+  }
+
+  function generate() {
+    if (!state.parsed) { toast('请先解析聊天记录'); return; }
+    if (!state.myKey) { toast('请先选择「我」是哪一位'); return; }
+    var report = Engine.analyze(state.parsed.msgs, {
+      myKey: state.myKey,
+      meName: $('me-name').value.trim() || '我',
+      friendName: $('friend-name').value.trim() || 'TA',
+    });
+    if (!report) { toast('分析失败，请检查内容'); return; }
+    state.report = report;
+    renderReport(report);
+    go('report');
+  }
+
+  /* ---------- 问答 ---------- */
+  var qSeg = $('q-talk');
+  qSeg.addEventListener('click', function (e) {
+    var item = e.target.closest('.seg-item');
+    if (!item) return;
+    var items = qSeg.querySelectorAll('.seg-item');
+    for (var i = 0; i < items.length; i++) items[i].classList.remove('on');
+    item.classList.add('on');
+  });
+
+  function generateQuiz() {
+    var report = Engine.analyzeQuiz({
+      meName: $('q-me').value.trim() || '我',
+      friendName: $('q-friend').value.trim() || 'TA',
+      knownDays: $('q-known').value,
+      time: $('q-time').value,
+      talkMore: (qSeg.querySelector('.seg-item.on') || {}).getAttribute('data-v') || 'TA',
+      topic: $('q-topic').value.trim(),
+      word: $('q-word').value.trim(),
+      memory: $('q-memory').value.trim(),
+    });
+    state.report = report;
+    renderReport(report);
+    go('report');
+  }
+
+  /* ---------- 报告渲染 ---------- */
+  function renderReport(r) {
+    state.slide = 0;
+    state.slideCount = 7;
+    $('rep-names').textContent = r.meName + ' × ' + r.friendName + ' 的年报';
+    document.title = r.meName + ' × ' + r.friendName + ' 的年报 · 好友年报';
+
+    var slides = [];
+    // 1 封面
+    slides.push(
+      '<div class="slide cover-slide">'
+      + '<span class="cover-badge">✨ 好友年报 · ' + r.year + '</span>'
+      + '<div class="cover-names">' + esc(r.meName) + ' × ' + esc(r.friendName) + '</div>'
+      + '<div class="cover-range">' + (r.startStr ? esc(r.startStr + ' ～ ' + r.endStr) : '一篇亲手填写的友谊档案') + '</div>'
+      + '<div class="cover-emoji">💌</div>'
+      + '<div class="cover-hint">点击下方 › 继续翻页</div>'
+      + '</div>'
+    );
+
+    // 2 数字总览
+    var talkLine = r.talkMore === 'friend' ? esc(r.friendName) + ' 是年度话痨担当 🗣️'
+      : r.talkMore === 'me' ? esc(r.meName) + ' 是年度话痨担当 🗣️'
+      : '势均力敌，双向奔赴的话痨 🤝';
+    slides.push(
+      '<div class="slide">'
+      + '<div class="slide-title">这一年，你们聊了多少</div>'
+      + '<div class="big-grid">'
+      + '<div class="big-cell"><div class="big-num">' + r.spanDays + '</div><div class="big-label">相识天数</div></div>'
+      + '<div class="big-cell"><div class="big-num">' + r.total + '</div><div class="big-label">消息总数</div></div>'
+      + '</div>'
+      + ratioRow(r.meName, r.myPct, 'me') + ratioRow(r.friendName, r.friendPct, 'friend')
+      + '<div class="verdict">' + talkLine + '</div>'
+      + '</div>'
+    );
+
+    // 3 活跃时段 / 节奏
+    if (!r.quiz) {
+      var maxH = Math.max.apply(null, r.hours) || 1;
+      var bars = '';
+      for (var i = 0; i < 24; i++) {
+        var h = Math.max(4, Math.round(r.hours[i] / maxH * 100));
+        bars += '<div class="bar-col"><div class="bar" style="height:' + h + '%">'
+          + (r.hours[i] > 0 ? '<span class="bar-val">' + r.hours[i] + '</span>' : '')
+          + '</div><span class="bar-label">' + (i % 6 === 0 ? i : '') + '</span></div>';
+      }
+      var nightNote = r.nightPct >= 25 ? '，认证夜猫子组合 🦉' : '';
+      slides.push(
+        '<div class="slide">'
+        + '<div class="slide-title">你们几点在线</div>'
+        + '<div class="chart-bars">' + bars + '</div>'
+        + '<div class="verdict">🌙 深夜消息占 ' + r.nightPct + '%，高峰在 ' + r.peakHour + ':00' + nightNote + '</div>'
+        + '</div>'
+      );
+    } else {
+      slides.push(
+        '<div class="slide">'
+        + '<div class="slide-title">我们的节奏</div>'
+        + '<div class="story-emoji">🕰️</div>'
+        + '<div class="story-text">' + esc(r.timeText) + '</div>'
+        + '<div class="story-line"></div>'
+        + '<div class="story-text">' + esc(r.talkMoreText) + '</div>'
+        + '<div class="story-line"></div>'
+        + '<div class="story-text">🌙 深夜指数 ' + r.nightPct + '%，属于你们的专属时区</div>'
+        + '</div>'
+      );
+    }
+
+    // 4 高频词 / 专属标签
+    if (!r.quiz) {
+      var maxN = r.words.length ? r.words[0].n : 1;
+      var wordsHtml = '';
+      for (var j = 0; j < r.words.length; j++) {
+        var w = r.words[j];
+        wordsHtml += '<span class="word" style="font-size:' + (24 + Math.round(w.n / maxN * 30)) + 'px">' + esc(w.w) + '</span>';
+      }
+      slides.push(
+        '<div class="slide">'
+        + '<div class="slide-title">你们的高频关键词</div>'
+        + '<div class="word-cloud">' + wordsHtml + '</div>'
+        + '<div class="verdict">😂 大笑 ' + r.laughCount + ' 次 · 🍬 甜蜜用语 ' + r.loveCount + ' 次 · 🎭 斗图 ' + r.emojiCount + ' 次</div>'
+        + '</div>'
+      );
+    } else {
+      slides.push(
+        '<div class="slide">'
+        + '<div class="slide-title">TA 在你心里是</div>'
+        + '<div class="big-word">' + esc(r.word || '独一无二') + '</div>'
+        + '<div class="story-line"></div>'
+        + '<div class="story-text">灵魂话题</div>'
+        + '<div class="topic-text">「' + esc(r.topic || '说不完的话') + '」</div>'
+        + '</div>'
+      );
+    }
+
+    // 5 亲密瞬间 / 故事
+    if (!r.quiz) {
+      var moments =
+        '<div class="moment"><div class="moment-icon">💬</div><div>'
+        + '<div class="moment-label">第一条消息 · ' + esc(r.firstMsg.time) + '</div>'
+        + '<div class="moment-text">' + esc(r.firstMsg.text) + '</div></div></div>'
+        + '<div class="moment"><div class="moment-icon">🔥</div><div>'
+        + '<div class="moment-label">最活跃的一天 · ' + esc(r.activeDay.date) + '</div>'
+        + '<div class="moment-text">单日 ' + r.activeDay.count + ' 条消息轰炸</div></div></div>'
+        + '<div class="moment"><div class="moment-icon">📅</div><div>'
+        + '<div class="moment-label">最长连续聊天</div>'
+        + '<div class="moment-text">连续 ' + r.streak.days + ' 天（' + esc(r.streak.start) + ' ~ ' + esc(r.streak.end) + '）</div></div></div>';
+      if (r.replyMedian != null) {
+        moments += '<div class="moment"><div class="moment-icon">🚀</div><div>'
+          + '<div class="moment-label">互相回复速度</div>'
+          + '<div class="moment-text">平均 ' + r.replyMedian + ' 秒，这就是双向奔赴</div></div></div>';
+      }
+      slides.push('<div class="slide"><div class="slide-title">亲密瞬间</div>' + moments + '</div>');
+    } else {
+      slides.push(
+        '<div class="slide">'
+        + '<div class="slide-title">我们的故事</div>'
+        + '<div class="story-emoji">📖</div>'
+        + '<div class="story-text">' + esc(r.memory || '有些故事写在心里，明年再补上。') + '</div>'
+        + '<div class="story-line"></div>'
+        + '<div class="story-text">相识 ' + r.spanDays + ' 天，累计消息约 ' + r.total + ' 条（估算，仅供娱乐）</div>'
+        + '</div>'
+      );
+    }
+
+    // 6 年度称号
+    var awardsHtml = '';
+    for (var k = 0; k < r.awards.length; k++) {
+      var a = r.awards[k];
+      awardsHtml += '<div class="award-card"><div class="award-icon">' + a.icon + '</div>'
+        + '<div><div class="award-title">' + esc(a.title) + '</div>'
+        + '<div class="award-desc">' + esc(a.desc) + '</div></div></div>';
+    }
+    slides.push('<div class="slide"><div class="slide-title">年度称号颁奖典礼</div>' + awardsHtml + '</div>');
+
+    // 7 尾声
+    slides.push(
+      '<div class="slide">'
+      + '<div class="slide-title">写给你们</div>'
+      + '<div class="verdict-text">' + esc(r.verdict) + '</div>'
+      + '<div class="slide-actions">'
+      + '<button class="btn" onclick="App.makePoster()">🎁 生成分享海报</button>'
+      + '<button class="share-btn" onclick="App.webShare()">📤 分享给好友</button>'
+      + '</div>'
+      + '</div>'
+    );
+
+    $('slides').innerHTML = slides.join('');
+    var dotsHtml = '';
+    for (var d = 0; d < 7; d++) dotsHtml += '<span class="dot"></span>';
+    $('dots').innerHTML = dotsHtml;
+    showSlide(0);
+  }
+
+  function ratioRow(name, pct, cls) {
+    return '<div class="ratio-row"><div class="ratio-name">' + esc(name) + '</div>'
+      + '<div class="ratio-bar"><div class="ratio-fill ' + cls + '" style="width:' + pct + '%"></div></div>'
+      + '<div class="ratio-pct">' + pct + '%</div></div>';
+  }
+
+  function showSlide(i) {
+    var slides = $('slides').querySelectorAll('.slide');
+    state.slide = Math.max(0, Math.min(i, slides.length - 1));
+    for (var s = 0; s < slides.length; s++) slides[s].classList.toggle('active', s === state.slide);
+    var dots = $('dots').querySelectorAll('.dot');
+    for (var d = 0; d < dots.length; d++) dots[d].classList.toggle('on', d === state.slide);
+    $('nav-prev').disabled = state.slide === 0;
+    $('nav-next').disabled = state.slide === slides.length - 1;
+  }
+
+  function next() { showSlide(state.slide + 1); }
+  function prev() { showSlide(state.slide - 1); }
+
+  // 滑动翻页
+  (function () {
+    var sx = null, sy = null;
+    $('slides').addEventListener('touchstart', function (e) {
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    }, { passive: true });
+    $('slides').addEventListener('touchend', function (e) {
+      if (sx == null) return;
+      var dx = e.changedTouches[0].clientX - sx;
+      var dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0) next(); else prev();
+      }
+      sx = null;
+    }, { passive: true });
+    document.addEventListener('keydown', function (e) {
+      if (!$('view-report').classList.contains('active')) return;
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'ArrowLeft') prev();
+    });
+  })();
+
+  /* ---------- 海报 ---------- */
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawPoster(r) {
+    var canvas = $('poster-canvas');
+    var ctx = canvas.getContext('2d');
+    var W = 640, H = 1000;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    ctx.scale(dpr, dpr);
+
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#FF8FA6');
+    g.addColorStop(0.55, '#FF5F7E');
+    g.addColorStop(1, '#F04A70');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.10)';
+    ctx.beginPath(); ctx.arc(580, 140, 170, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(50, 920, 120, 0, Math.PI * 2); ctx.fill();
+
+    roundRect(ctx, 36, 210, 568, 720, 36);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 52px sans-serif';
+    ctx.fillText('好友年报', W / 2, 110);
+    ctx.font = '22px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.fillText('FRIEND YEAR REPORT · ' + r.year, W / 2, 152);
+
+    ctx.fillStyle = '#4A2B33';
+    ctx.font = 'bold 44px sans-serif';
+    ctx.fillText(r.meName + ' × ' + r.friendName, W / 2, 292);
+    ctx.font = '24px sans-serif';
+    ctx.fillStyle = '#96737D';
+    ctx.fillText(r.startStr ? (r.startStr + ' ~ ' + r.endStr) : ('由 ' + r.meName + ' 亲手填写生成'), W / 2, 330);
+
+    ctx.strokeStyle = '#F3DFE4';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(80, 360); ctx.lineTo(560, 360);
+    ctx.stroke();
+
+    var stats = [
+      ['相识天数', r.spanDays + ' 天'],
+      ['消息总数', (r.total > 999 ? (r.total / 1000).toFixed(1) + 'k' : r.total) + ' 条'],
+      ['深夜占比', r.nightPct + '%'],
+      ['消息比', r.myPct + ' : ' + r.friendPct],
+    ];
+    var boxW = 224, boxH = 108;
+    for (var i = 0; i < 4; i++) {
+      var x = 72 + (i % 2) * (boxW + 16);
+      var y = 388 + Math.floor(i / 2) * (boxH + 16);
+      roundRect(ctx, x, y, boxW, boxH, 20);
+      ctx.fillStyle = '#FFF2F5';
+      ctx.fill();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#96737D';
+      ctx.font = '22px sans-serif';
+      ctx.fillText(stats[i][0], x + boxW / 2, y + 38);
+      ctx.fillStyle = '#E04368';
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText(stats[i][1], x + boxW / 2, y + 84);
+    }
+
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillStyle = '#4A2B33';
+    ctx.fillText('🏆 年度称号', 80, 672);
+    var ay = 714;
+    var list = r.awards.slice(0, 4);
+    for (var ai = 0; ai < list.length; ai++) {
+      var a = list[ai];
+      ctx.font = '25px sans-serif';
+      ctx.fillStyle = '#6B4A55';
+      ctx.fillText(a.icon + '  ' + a.title, 80, ay);
+      ctx.font = '20px sans-serif';
+      ctx.fillStyle = '#96737D';
+      var desc = a.desc.length > 24 ? a.desc.slice(0, 24) + '…' : a.desc;
+      ctx.fillText('　　' + desc, 80, ay + 30);
+      ay += 62;
+    }
+
+    ctx.textAlign = 'center';
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#C9A6AF';
+    ctx.fillText('数据仅本地分析 · 由「好友年报」生成', W / 2, H - 42);
+
+    return canvas.toDataURL('image/png');
+  }
+
+  function makePoster() {
+    if (!state.report) return;
+    var url = drawPoster(state.report);
+    state.posterDataURL = url;
+    $('poster-img').src = url;
+    var canShare = typeof navigator.share === 'function' && navigator.userAgent.match(/Android|iPhone|iPad/i);
+    $('share-btn').style.display = canShare ? 'block' : 'none';
+    $('poster-modal').classList.remove('hidden');
+  }
+
+  function closePoster() {
+    $('poster-modal').classList.add('hidden');
+  }
+  $('poster-modal').addEventListener('click', function (e) {
+    if (e.target === $('poster-modal')) closePoster();
+  });
+
+  function downloadPoster() {
+    if (!state.posterDataURL) return;
+    var a = document.createElement('a');
+    a.href = state.posterDataURL;
+    a.download = '好友年报海报.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast('海报已开始下载 📥');
+  }
+
+  function sharePoster() {
+    if (!state.posterDataURL) return;
+    $('poster-canvas').toBlob(function (blob) {
+      var file = new File([blob], '好友年报海报.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: '好友年报' }).catch(function () {});
+      } else {
+        downloadPoster();
+        toast('当前浏览器不支持直接分享，已改为下载');
+      }
+    }, 'image/png');
+  }
+
+  function webShare() {
+    var r = state.report;
+    var text = '来看看「' + r.meName + ' × ' + r.friendName + '」的年度报告 👀 打开链接就能生成你们自己的：' + location.href;
+    if (typeof navigator.share === 'function') {
+      navigator.share({ title: '好友年报', text: text }).catch(function () {});
+    } else {
+      toast('已复制链接，去粘贴给好友吧');
+      try {
+        if (navigator.clipboard) navigator.clipboard.writeText(text);
+      } catch (e) {}
+    }
+  }
+
+  return {
+    go: go,
+    trySample: trySample,
+    parse: parse,
+    pickMe: pickMe,
+    resetImport: resetImport,
+    generate: generate,
+    generateQuiz: generateQuiz,
+    prev: prev,
+    next: next,
+    makePoster: makePoster,
+    closePoster: closePoster,
+    downloadPoster: downloadPoster,
+    sharePoster: sharePoster,
+    webShare: webShare,
+  };
+})();
+</script>
+</body>
+</html>

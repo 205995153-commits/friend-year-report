@@ -1,0 +1,18 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/import/import",
+    "pages/quiz/quiz",
+    "pages/report/report"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FF5F7E",
+    "navigationBarTitleText": "好友年报",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#FFF6F4",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

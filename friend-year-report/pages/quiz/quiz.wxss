@@ -1,0 +1,40 @@
+.picker-box {
+  background: #fff8f9;
+  border: 2rpx solid #f3dfe4;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  margin-bottom: 8rpx;
+}
+
+.seg {
+  display: flex;
+  gap: 16rpx;
+}
+.seg-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx 0;
+  background: #fff8f9;
+  border: 2rpx solid #f3dfe4;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  color: var(--ink-soft);
+}
+.seg-item.on {
+  background: linear-gradient(135deg, #ff7a93, #ff5f7e);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 700;
+}
+
+.paste-area {
+  width: 100%;
+  background: #fff8f9;
+  border: 2rpx dashed #f0c4cf;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  font-size: 26rpx;
+  box-sizing: border-box;
+  margin-bottom: 24rpx;
+}

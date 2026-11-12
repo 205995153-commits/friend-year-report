@@ -1,0 +1,113 @@
+/* ============ 全局主题 ============ */
+page {
+  --primary: #ff5f7e;
+  --primary-deep: #e04368;
+  --accent: #ffb347;
+  --ink: #4a2b33;
+  --ink-soft: #96737d;
+  --card: #ffffff;
+  background: linear-gradient(160deg, #ffe8ee 0%, #fff6f4 45%, #fff0e6 100%);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Helvetica Neue", "Microsoft YaHei", sans-serif;
+  min-height: 100vh;
+  font-size: 28rpx;
+}
+
+.page {
+  padding: 32rpx 32rpx 80rpx;
+  box-sizing: border-box;
+}
+
+/* ============ 通用组件 ============ */
+.card {
+  background: var(--card);
+  border-radius: 28rpx;
+  padding: 32rpx;
+  box-shadow: 0 12rpx 44rpx rgba(224, 67, 104, 0.09);
+  margin-bottom: 28rpx;
+  box-sizing: border-box;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #ff7a93 0%, #ff5f7e 60%, #f04a70 100%);
+  color: #fff;
+  border-radius: 999rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  padding: 24rpx 0;
+  text-align: center;
+  box-shadow: 0 10rpx 30rpx rgba(240, 74, 112, 0.35);
+  letter-spacing: 2rpx;
+}
+.btn-primary:active {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+.btn-primary.disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.btn-ghost {
+  background: #fff;
+  color: var(--primary-deep);
+  border: 2rpx solid rgba(224, 67, 104, 0.35);
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+  padding: 22rpx 0;
+  text-align: center;
+}
+
+.chip {
+  display: inline-block;
+  background: #fff0f3;
+  color: var(--primary-deep);
+  border-radius: 999rpx;
+  padding: 8rpx 24rpx;
+  font-size: 24rpx;
+  margin: 0 12rpx 12rpx 0;
+}
+
+.section-title {
+  font-size: 34rpx;
+  font-weight: 800;
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+}
+.section-title .dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--primary);
+  margin-right: 12rpx;
+  display: inline-block;
+}
+
+.muted {
+  color: var(--ink-soft);
+  font-size: 24rpx;
+}
+
+.input-box {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  border: 2rpx solid #f3dfe4;
+  margin-bottom: 20rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+.input-box:focus {
+  border-color: var(--primary);
+}
+
+.field-label {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  margin: 20rpx 0 12rpx;
+  font-weight: 600;
+}

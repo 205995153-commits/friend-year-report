@@ -8,6 +8,8 @@ Page({
     posterPath: '',
     saving: false,
     showPoster: false,
+    current: 0,
+    totalPages: 7,
   },
 
   onLoad() {
@@ -73,6 +75,33 @@ Page({
 
   goHome() {
     wx.reLaunch({ url: '/pages/index/index' });
+  },
+
+  /* ================= 点击翻页 ================= */
+
+  onSwiperChange(e) {
+    this.setData({ current: e.detail.current });
+  },
+
+  nextPage() {
+    if (this.data.current < this.data.totalPages - 1) {
+      this.setData({ current: this.data.current + 1 });
+    }
+  },
+
+  prevPage() {
+    if (this.data.current > 0) {
+      this.setData({ current: this.data.current - 1 });
+    }
+  },
+
+  // 底部导航按钮：最后一页 → 生成海报，其余 → 下一页
+  onNavTap() {
+    if (this.data.current >= this.data.totalPages - 1) {
+      this.makePoster();
+    } else {
+      this.nextPage();
+    }
   },
 
   /* ================= 分享海报 ================= */

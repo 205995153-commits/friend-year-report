@@ -1,9 +1,8 @@
 <view class="report" wx:if="{{r}}">
   <swiper
     class="swiper"
-    indicator-dots
-    indicator-color="rgba(224,67,104,0.18)"
-    indicator-active-color="#FF5F7E"
+    current="{{current}}"
+    bindchange="onSwiperChange"
   >
     <!-- 1 封面 -->
     <swiper-item>
@@ -204,6 +203,18 @@
       </scroll-view>
     </swiper-item>
   </swiper>
+
+  <!-- 底部点击翻页导航 -->
+  <view class="report-nav">
+    <view class="nav-back {{current === 0 ? 'off' : ''}}" bindtap="prevPage">‹</view>
+    <view class="nav-progress">
+      <text class="nav-cur">{{current + 1}}</text>
+      <text class="nav-total">/ {{totalPages}}</text>
+    </view>
+    <view class="nav-next {{current >= totalPages - 1 ? 'final' : ''}}" bindtap="onNavTap">
+      {{current >= totalPages - 1 ? '🎁 生成海报' : '下一页 →'}}
+    </view>
+  </view>
 
   <!-- 海报预览弹层 -->
   <view class="poster-mask" wx:if="{{showPoster}}" bindtap="closePoster">

@@ -123,6 +123,7 @@ page {
 
 .input-box {
   background: #fff;
+  color: #3d2129;
   border-radius: 20rpx;
   padding: 20rpx 24rpx;
   font-size: 28rpx;
@@ -170,11 +171,8 @@ page {
   animation: fadeUp 0.45s ease both;
 }
 
-/* 渐变文字 */
+/* 渐变文字（兼容性降级：老设备不支持 background-clip 时也能正常显示） */
 .grad-text {
-  background: linear-gradient(120deg, #ff5f7e 0%, #f04a70 45%, #ffb199 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  display: inline-block;
+  color: var(--primary-deep);
+  font-weight: 900;
 }

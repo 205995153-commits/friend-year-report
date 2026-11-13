@@ -7,8 +7,68 @@
 }
 .slide {
   height: 100vh;
-  padding: 48rpx 40rpx 120rpx;
+  padding: 48rpx 40rpx 200rpx;
   box-sizing: border-box;
+}
+
+/* ============ 底部点击翻页导航 ============ */
+.report-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 -8rpx 30rpx rgba(224, 67, 104, 0.10);
+  z-index: 50;
+}
+.nav-back {
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  background: #fff;
+  border: 2rpx solid rgba(224, 67, 104, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  color: var(--primary-deep);
+  font-weight: 300;
+  transition: opacity 0.15s ease;
+}
+.nav-back.off {
+  opacity: 0.25;
+}
+.nav-progress {
+  font-size: 26rpx;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+.nav-cur {
+  color: var(--primary-deep);
+  font-size: 34rpx;
+  font-weight: 900;
+}
+.nav-next {
+  background: linear-gradient(135deg, #ff7a93, #ff5f7e 60%, #f04a70);
+  color: #fff;
+  border-radius: 999rpx;
+  padding: 20rpx 44rpx;
+  font-size: 28rpx;
+  font-weight: 800;
+  box-shadow: 0 10rpx 26rpx rgba(240, 74, 112, 0.35);
+  transition: transform 0.12s ease;
+}
+.nav-next:active {
+  transform: scale(0.96);
+}
+.nav-next.final {
+  background: linear-gradient(135deg, #ffb347, #ff8a5c);
+  box-shadow: 0 10rpx 26rpx rgba(255, 138, 92, 0.40);
+  animation: pulse 2.2s ease-in-out infinite;
 }
 
 /* ============ 封面 ============ */

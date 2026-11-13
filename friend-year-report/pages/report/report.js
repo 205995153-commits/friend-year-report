@@ -128,22 +128,38 @@ Page({
 
   noop() {},
 
+  // 隐私授权：保存到相册前主动触发官方隐私弹窗（老基础库降级直接执行）
+  ensurePrivacy(cb) {
+    if (typeof wx.requirePrivacyAuthorize === 'function') {
+      wx.requirePrivacyAuthorize({
+        success: () => cb(),
+        fail: () => {
+          wx.showToast({ title: '需同意隐私协议后才能保存', icon: 'none' });
+        },
+      });
+    } else {
+      cb();
+    }
+  },
+
   savePoster() {
     const p = this.data.posterPath;
     if (!p) return;
-    wx.saveImageToPhotosAlbum({
-      filePath: p,
-      success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
-      fail: () => {
-        wx.showModal({
-          title: '需要相册权限',
-          content: '请在设置中允许「保存到相册」，才能保存海报',
-          confirmText: '去设置',
-          success: (res) => {
-            if (res.confirm) wx.openSetting();
-          },
-        });
-      },
+    this.ensurePrivacy(() => {
+      wx.saveImageToPhotosAlbum({
+        filePath: p,
+        success: () => wx.showToast({ title: '已保存到相册', icon: 'success' }),
+        fail: () => {
+          wx.showModal({
+            title: '需要相册权限',
+            content: '请在设置中允许「保存到相册」，才能保存海报',
+            confirmText: '去设置',
+            success: (res) => {
+              if (res.confirm) wx.openSetting();
+            },
+          });
+        },
+      });
     });
   },
 

@@ -17,27 +17,43 @@ Page({
     this.setData({ pasted: e.detail.value, error: '' });
   },
 
+  // 隐私授权：调用隐私接口前主动触发官方隐私弹窗（老基础库降级直接执行）
+  ensurePrivacy(cb) {
+    if (typeof wx.requirePrivacyAuthorize === 'function') {
+      wx.requirePrivacyAuthorize({
+        success: () => cb(),
+        fail: () => {
+          wx.showToast({ title: '需同意隐私协议后才能选择文件', icon: 'none' });
+        },
+      });
+    } else {
+      cb();
+    }
+  },
+
   // 从微信聊天里选择导出的文件（如发到"文件传输助手"的记录文件）
   chooseFile() {
-    wx.chooseMessageFile({
-      count: 1,
-      type: 'file',
-      extension: ['txt', 'json'],
-      success: (res) => {
-        const file = res.tempFiles[0];
-        try {
-          const fs = wx.getFileSystemManager();
-          const data = fs.readFileSync(file.path, 'utf8');
-          this.setData({ pasted: String(data) });
-          this.doParse();
-        } catch (e) {
-          wx.showToast({ title: '读取文件失败', icon: 'none' });
-        }
-      },
-      fail: (e) => {
-        if (e && e.errMsg && e.errMsg.indexOf('cancel') >= 0) return;
-        wx.showToast({ title: '选择文件失败', icon: 'none' });
-      },
+    this.ensurePrivacy(() => {
+      wx.chooseMessageFile({
+        count: 1,
+        type: 'file',
+        extension: ['txt', 'json'],
+        success: (res) => {
+          const file = res.tempFiles[0];
+          try {
+            const fs = wx.getFileSystemManager();
+            const data = fs.readFileSync(file.path, 'utf8');
+            this.setData({ pasted: String(data) });
+            this.doParse();
+          } catch (e) {
+            wx.showToast({ title: '读取文件失败', icon: 'none' });
+          }
+        },
+        fail: (e) => {
+          if (e && e.errMsg && e.errMsg.indexOf('cancel') >= 0) return;
+          wx.showToast({ title: '选择文件失败', icon: 'none' });
+        },
+      });
     });
   },
 

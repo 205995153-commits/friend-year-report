@@ -2,7 +2,7 @@
   <swiper
     class="swiper"
     indicator-dots
-    indicator-color="rgba(0,0,0,0.15)"
+    indicator-color="rgba(224,67,104,0.18)"
     indicator-active-color="#FF5F7E"
   >
     <!-- 1 封面 -->
@@ -10,10 +10,12 @@
       <scroll-view scroll-y class="slide">
         <view class="cover">
           <view class="cover-badge">✨ 好友年报 · {{r.year}}</view>
-          <view class="cover-names">{{r.meName}} × {{r.friendName}}</view>
+          <view class="cover-names grad-text">{{r.meName}} × {{r.friendName}}</view>
           <view class="cover-range" wx:if="{{r.startStr}}">{{r.startStr}} ～ {{r.endStr}}</view>
           <view class="cover-range" wx:else>一篇亲手填写的友谊档案</view>
-          <view class="cover-emoji">💌</view>
+          <view class="cover-ring">
+            <view class="cover-emoji">💌</view>
+          </view>
           <view class="cover-hint">左右滑动，解锁年度报告 →</view>
         </view>
       </scroll-view>
@@ -22,14 +24,14 @@
     <!-- 2 数字总览 -->
     <swiper-item>
       <scroll-view scroll-y class="slide">
-        <view class="slide-title">这一年，你们聊了多少</view>
+        <view class="slide-title fade-up">这一年，你们聊了多少</view>
         <view class="big-grid">
           <view class="big-cell">
-            <view class="big-num">{{r.spanDays}}</view>
+            <view class="big-num grad-text">{{r.spanDays}}</view>
             <view class="big-label">相识天数</view>
           </view>
           <view class="big-cell">
-            <view class="big-num">{{r.total}}</view>
+            <view class="big-num grad-text">{{r.total}}</view>
             <view class="big-label">消息总数</view>
           </view>
         </view>
@@ -59,31 +61,37 @@
     <swiper-item>
       <scroll-view scroll-y class="slide">
         <block wx:if="{{!r.quiz}}">
-          <view class="slide-title">你们几点在线</view>
+          <view class="slide-title fade-up">你们几点在线</view>
           <view class="chart card inner">
             <view class="chart-bars">
               <view wx:for="{{bars}}" wx:key="label" class="bar-col">
-                <view class="bar" style="height:{{item.h}}%">
-                  <text wx:if="{{item.v > 0}}" class="bar-val">{{item.v}}</text>
+                <view class="bar {{item.night ? 'night' : ''}} {{item.peak ? 'peak' : ''}}" style="height:{{item.h}}%">
+                  <text wx:if="{{item.peak}}" class="bar-crown">👑</text>
+                  <text wx:if="{{!item.peak && item.v > 0}}" class="bar-val">{{item.v}}</text>
                 </view>
-                <view class="bar-label">{{item.showLabel ? item.label : ''}}</view>
+                <view class="bar-label {{item.peak ? 'hl' : ''}}">{{item.showLabel ? item.label : ''}}</view>
               </view>
+            </view>
+            <view class="chart-legend">
+              <text class="lg-item"><text class="lg-dot day"></text>白天</text>
+              <text class="lg-item"><text class="lg-dot night"></text>深夜(23~5点)</text>
+              <text class="lg-item"><text class="lg-dot peak"></text>峰值</text>
             </view>
           </view>
           <view class="verdict-line">
             🌙 深夜消息占 {{r.nightPct}}%，高峰在 {{r.peakHour}}:00
           </view>
-          <view class="verdict-line" wx:if="{{r.nightPct >= 25}}">认证夜猫子组合，月亮都困了你们还没聊完</view>
+          <view class="verdict-line" wx:if="{{r.nightPct >= 25}}">认证夜猫子组合，月亮都困了你们还没聊完 🦉</view>
         </block>
         <block wx:else>
-          <view class="slide-title">我们的节奏</view>
+          <view class="slide-title fade-up">我们的节奏</view>
           <view class="card inner">
             <view class="story-emoji">🕰️</view>
             <view class="story-text">{{r.timeText}}</view>
             <view class="story-line"></view>
             <view class="story-text">{{r.talkMoreText}}</view>
-            <view class="story-emoji">🌙</view>
-            <view class="story-text">深夜指数 {{r.nightPct}}%，属于你们的专属时区</view>
+            <view class="story-line"></view>
+            <view class="story-text">🌙 深夜指数 {{r.nightPct}}%，属于你们的专属时区</view>
           </view>
         </block>
       </scroll-view>
@@ -93,18 +101,23 @@
     <swiper-item>
       <scroll-view scroll-y class="slide">
         <block wx:if="{{!r.quiz}}">
-          <view class="slide-title">你们的高频关键词</view>
+          <view class="slide-title fade-up">你们的高频关键词</view>
           <view class="word-cloud card inner">
-            <text wx:for="{{wordList}}" wx:key="w" class="word" style="font-size:{{item.size}}rpx">{{item.w}}</text>
+            <text
+              wx:for="{{wordList}}"
+              wx:key="w"
+              class="word"
+              style="font-size:{{item.size}}rpx;color:{{item.color}};transform:rotate({{item.rot}}deg)"
+            >{{item.w}}</text>
           </view>
           <view class="verdict-line">
             😂 大笑 {{r.laughCount}} 次 · 🍬 甜蜜用语 {{r.loveCount}} 次 · 🎭 斗图 {{r.emojiCount}} 次
           </view>
         </block>
         <block wx:else>
-          <view class="slide-title">TA 在你心里是</view>
+          <view class="slide-title fade-up">TA 在你心里是</view>
           <view class="card inner center-card">
-            <view class="big-word">{{r.word || '独一无二'}}</view>
+            <view class="big-word grad-text">{{r.word || '独一无二'}}</view>
             <view class="story-line"></view>
             <view class="story-text">灵魂话题</view>
             <view class="topic-text">「{{r.topic || '说不完的话'}}」</view>
@@ -117,7 +130,7 @@
     <swiper-item>
       <scroll-view scroll-y class="slide">
         <block wx:if="{{!r.quiz}}">
-          <view class="slide-title">亲密瞬间</view>
+          <view class="slide-title fade-up">亲密瞬间</view>
           <view class="card inner">
             <view class="moment">
               <view class="moment-icon">💬</view>
@@ -150,7 +163,7 @@
           </view>
         </block>
         <block wx:else>
-          <view class="slide-title">我们的故事</view>
+          <view class="slide-title fade-up">我们的故事</view>
           <view class="card inner">
             <view class="story-emoji">📖</view>
             <view class="story-text">{{r.memory || '有些故事写在心里，明年再补上。'}}</view>
@@ -164,9 +177,9 @@
     <!-- 6 年度称号 -->
     <swiper-item>
       <scroll-view scroll-y class="slide">
-        <view class="slide-title">年度称号颁奖典礼</view>
+        <view class="slide-title fade-up">年度称号颁奖典礼</view>
         <view class="award-card" wx:for="{{r.awards}}" wx:key="title">
-          <view class="award-icon">{{item.icon}}</view>
+          <view class="award-icon" style="background:{{item.bg}}">{{item.icon}}</view>
           <view class="award-body">
             <view class="award-title">{{item.title}}</view>
             <view class="award-desc">{{item.desc}}</view>
@@ -178,11 +191,12 @@
     <!-- 7 尾声 -->
     <swiper-item>
       <scroll-view scroll-y class="slide">
-        <view class="slide-title">写给你们</view>
-        <view class="card inner">
+        <view class="slide-title fade-up">写给你们</view>
+        <view class="card inner verdict-card">
+          <view class="quote-mark">“</view>
           <view class="verdict-text">{{r.verdict}}</view>
         </view>
-        <view class="btn-primary" bindtap="makePoster">
+        <view class="btn-primary cta-pulse" bindtap="makePoster">
           {{saving ? '生成中…' : '🎁 生成分享海报'}}
         </view>
         <button class="share-btn" open-type="share">📤 分享给好友</button>

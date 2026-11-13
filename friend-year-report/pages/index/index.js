@@ -1,7 +1,9 @@
 const app = getApp();
 
 Page({
-  data: {},
+  data: {
+    year: new Date().getFullYear(),
+  },
 
   onLoad() {
     app.globalData.report = null;

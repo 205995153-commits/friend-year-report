@@ -16,19 +16,45 @@ Page({
       wx.reLaunch({ url: '/pages/index/index' });
       return;
     }
-    // 24 小时活跃柱状图
+    // 24 小时活跃柱状图（含夜色高亮与峰值标记）
     const maxH = Math.max.apply(null, r.hours || [1]);
     const bars = (r.hours || []).map((v, i) => ({
       h: Math.max(4, Math.round((v / maxH) * 100)),
       v,
       label: i,
       showLabel: i % 6 === 0,
+      night: i >= 23 || i <= 5,
+      peak: i === r.peakHour,
     }));
-    // 高频词字号
+    // 高频词：彩色 + 微旋转
+    const WORD_COLORS = [
+      '#FF5F7E', '#F04A70', '#FF8A5C', '#FFB347', '#B983E0',
+      '#5C9DF0', '#4FC3A1', '#E06C8F', '#FF5F7E', '#FF8A5C',
+    ];
     const maxN = r.words && r.words.length ? r.words[0].n : 1;
-    const wordList = (r.words || []).map((w) => ({
+    const wordList = (r.words || []).map((w, idx) => ({
       ...w,
       size: 24 + Math.round((w.n / maxN) * 30),
+      color: WORD_COLORS[idx % WORD_COLORS.length],
+      rot: ((idx * 7) % 13) - 6,
+    }));
+    // 称号图标彩色气泡
+    const AWARD_BG = {
+      '🌙': 'linear-gradient(135deg,#EAF1FF,#DCE8FF)',
+      '⚡': 'linear-gradient(135deg,#FFF3E0,#FFE7C2)',
+      '💬': 'linear-gradient(135deg,#E8F0FF,#D5E5FF)',
+      '🚀': 'linear-gradient(135deg,#FFE9EF,#FFD6E2)',
+      '😂': 'linear-gradient(135deg,#FFF0E2,#FFE3C7)',
+      '🍬': 'linear-gradient(135deg,#FFEBF0,#FFD9E4)',
+      '🎭': 'linear-gradient(135deg,#F0EBFF,#E2D9FF)',
+      '📅': 'linear-gradient(135deg,#E9F5F0,#D7EEE6)',
+      '⏱️': 'linear-gradient(135deg,#EEF2F7,#DFE7F0)',
+      '🏷️': 'linear-gradient(135deg,#FBF1E4,#F5E5CB)',
+      '🍜': 'linear-gradient(135deg,#FBEFE4,#F6DFC9)',
+    };
+    r.awards = (r.awards || []).map((a) => ({
+      ...a,
+      bg: AWARD_BG[a.icon] || AWARD_BG['🏷️'],
     }));
     this.setData({ r, bars, wordList });
     wx.setNavigationBarTitle({

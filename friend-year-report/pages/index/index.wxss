@@ -4,54 +4,98 @@
   min-height: 100vh;
 }
 
+/* ---------- Hero ---------- */
 .hero {
-  padding: 40rpx 8rpx 48rpx;
+  padding: 30rpx 8rpx 44rpx;
   position: relative;
 }
+.deco {
+  position: absolute;
+  font-size: 40rpx;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.d1 { top: 10rpx; right: 60rpx; animation: float 3.2s ease-in-out infinite; }
+.d2 { top: 120rpx; left: 20rpx; animation: floatSoft 4s ease-in-out infinite 0.4s; font-size: 32rpx; }
+.d3 { top: 40rpx; right: 150rpx; animation: floatSoft 3.6s ease-in-out infinite 0.9s; font-size: 30rpx; }
+.d4 { top: 210rpx; right: 30rpx; animation: float 2.8s ease-in-out infinite 0.6s; font-size: 26rpx; }
+.d5 { top: 260rpx; left: 90rpx; animation: floatSoft 4.4s ease-in-out infinite 1.2s; font-size: 34rpx; }
+
 .badge {
   display: inline-block;
-  background: rgba(255, 95, 126, 0.12);
+  background: linear-gradient(135deg, rgba(255, 95, 126, 0.14), rgba(255, 179, 71, 0.14));
   color: var(--primary-deep);
   border-radius: 999rpx;
-  padding: 8rpx 26rpx;
+  padding: 10rpx 30rpx;
   font-size: 24rpx;
   font-weight: 700;
-  margin-bottom: 24rpx;
+  margin-bottom: 26rpx;
+  box-shadow: 0 4rpx 14rpx rgba(224, 67, 104, 0.12);
 }
 .hero-title {
-  font-size: 64rpx;
+  font-size: 66rpx;
   font-weight: 900;
-  line-height: 1.25;
+  line-height: 1.28;
   color: #3d2129;
+  letter-spacing: 1rpx;
 }
 .hero-sub {
   margin-top: 20rpx;
   font-size: 28rpx;
   color: var(--ink-soft);
-  line-height: 1.6;
-}
-.hero-deco {
-  margin-top: 24rpx;
-  font-size: 44rpx;
-  letter-spacing: 16rpx;
+  line-height: 1.7;
 }
 
+.feat-row {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 30rpx;
+}
+.feat-chip {
+  background: #fff;
+  border: 2rpx solid rgba(255, 143, 166, 0.25);
+  border-radius: 999rpx;
+  padding: 8rpx 22rpx;
+  font-size: 22rpx;
+  color: #6b4a55;
+  font-weight: 600;
+  box-shadow: 0 4rpx 14rpx rgba(224, 67, 104, 0.07);
+}
+
+/* ---------- 模式卡片 ---------- */
 .mode-card {
   display: flex;
   align-items: center;
   background: #fff;
-  border-radius: 28rpx;
+  border: 2rpx solid rgba(255, 143, 166, 0.14);
+  border-radius: 32rpx;
   padding: 36rpx 32rpx;
   margin-bottom: 28rpx;
-  box-shadow: 0 12rpx 44rpx rgba(224, 67, 104, 0.09);
+  box-shadow: 0 8rpx 24rpx rgba(224, 67, 104, 0.06),
+    0 24rpx 56rpx rgba(224, 67, 104, 0.10);
   transition: transform 0.15s ease;
 }
 .mode-card-hover {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 .mode-icon {
-  font-size: 60rpx;
-  margin-right: 28rpx;
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52rpx;
+  margin-right: 26rpx;
+  flex-shrink: 0;
+}
+.import-icon {
+  background: linear-gradient(135deg, #ffe9ef, #ffd4de);
+  box-shadow: 0 8rpx 20rpx rgba(255, 95, 126, 0.18);
+}
+.quiz-icon {
+  background: linear-gradient(135deg, #fff3e4, #ffe3c2);
+  box-shadow: 0 8rpx 20rpx rgba(255, 179, 71, 0.18);
 }
 .mode-body {
   flex: 1;
@@ -67,9 +111,10 @@
   line-height: 1.5;
 }
 .arrow {
-  font-size: 48rpx;
+  font-size: 52rpx;
   color: #e8c2cc;
   font-weight: 300;
+  margin-left: 12rpx;
 }
 
 .privacy {

@@ -1,31 +1,46 @@
-.picker-box {
+.picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background: #fff8f9;
   border: 2rpx solid #f3dfe4;
   border-radius: 20rpx;
-  padding: 20rpx 24rpx;
-  font-size: 28rpx;
+  padding: 22rpx 26rpx;
   margin-bottom: 8rpx;
+  transition: border-color 0.15s ease;
+}
+.picker-val {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+.picker-chevron {
+  color: var(--primary);
+  font-size: 24rpx;
 }
 
 .seg {
   display: flex;
   gap: 16rpx;
+  background: #fff8f9;
+  border-radius: 22rpx;
+  padding: 10rpx;
+  margin-top: 4rpx;
 }
 .seg-item {
   flex: 1;
   text-align: center;
-  padding: 20rpx 0;
-  background: #fff8f9;
-  border: 2rpx solid #f3dfe4;
-  border-radius: 20rpx;
+  padding: 18rpx 0;
+  border-radius: 16rpx;
   font-size: 28rpx;
   color: var(--ink-soft);
+  font-weight: 600;
+  transition: all 0.18s ease;
 }
 .seg-item.on {
   background: linear-gradient(135deg, #ff7a93, #ff5f7e);
   color: #fff;
-  border-color: transparent;
   font-weight: 700;
+  box-shadow: 0 8rpx 20rpx rgba(255, 95, 126, 0.30);
 }
 
 .paste-area {

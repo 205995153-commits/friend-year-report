@@ -10,12 +10,18 @@
 
     <view class="field-label">你们认识多久了？</view>
     <picker mode="selector" range="{{knownDaysList}}" value="{{knownDaysIndex}}" bindchange="onKnownDays">
-      <view class="picker-box">{{knownDaysList[knownDaysIndex]}} ▾</view>
+      <view class="picker-row">
+        <text class="picker-val">{{knownDaysList[knownDaysIndex]}}</text>
+        <text class="picker-chevron">▾</text>
+      </view>
     </picker>
 
     <view class="field-label">最常聊天的时间段</view>
     <picker mode="selector" range="{{timeList}}" value="{{timeIndex}}" bindchange="onTime">
-      <view class="picker-box">{{timeList[timeIndex]}} ▾</view>
+      <view class="picker-row">
+        <text class="picker-val">{{timeList[timeIndex]}}</text>
+        <text class="picker-chevron">▾</text>
+      </view>
     </picker>
 
     <view class="field-label">谁更话痨？</view>

@@ -1,13 +1,71 @@
+/* ---------- 步骤指示器 ---------- */
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30rpx;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.step-num {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: #fff;
+  border: 2rpx solid #f0d3db;
+  color: #c9a6af;
+  font-size: 28rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.step.on .step-num {
+  background: linear-gradient(135deg, #ff8fa6, #ff5f7e);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8rpx 20rpx rgba(255, 95, 126, 0.35);
+}
+.step.done .step-num {
+  background: #e8f7f0;
+  border-color: #bfe8d8;
+  color: #2fae7c;
+}
+.step-label {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: #c9a6af;
+  font-weight: 600;
+}
+.step.on .step-label {
+  color: var(--primary-deep);
+}
+.step-line {
+  width: 120rpx;
+  height: 4rpx;
+  border-radius: 4rpx;
+  background: #f0d3db;
+  margin: 0 24rpx 40rpx;
+}
+.step-line.on {
+  background: linear-gradient(90deg, #ff8fa6, #ff5f7e);
+}
+
 .paste-area {
   width: 100%;
   min-height: 320rpx;
   background: #fff8f9;
   border: 2rpx dashed #f0c4cf;
-  border-radius: 20rpx;
-  padding: 20rpx;
+  border-radius: 24rpx;
+  padding: 24rpx;
   font-size: 26rpx;
   box-sizing: border-box;
   margin-bottom: 24rpx;
+  transition: border-color 0.15s ease;
 }
 
 .or {
@@ -34,26 +92,41 @@
   text-align: center;
 }
 
+/* ---------- 身份卡片 ---------- */
 .sender-list {
   margin-bottom: 8rpx;
 }
 .sender-row {
   display: flex;
   align-items: center;
-  padding: 24rpx 20rpx;
-  border-radius: 20rpx;
+  padding: 26rpx 24rpx;
+  border-radius: 24rpx;
   background: #fff8f9;
-  margin-bottom: 16rpx;
+  margin-bottom: 18rpx;
   border: 2rpx solid transparent;
+  transition: all 0.15s ease;
 }
 .sender-row.active {
-  border-color: var(--primary);
+  border-color: rgba(255, 95, 126, 0.5);
   background: #fff0f3;
+  box-shadow: 0 10rpx 28rpx rgba(255, 95, 126, 0.14);
 }
-.radio {
-  color: var(--primary);
-  font-size: 32rpx;
-  margin-right: 20rpx;
+.sender-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  margin-right: 22rpx;
+  flex-shrink: 0;
+}
+.sender-avatar.me {
+  background: linear-gradient(135deg, #ffe9ef, #ffd4de);
+}
+.sender-avatar.friend {
+  background: linear-gradient(135deg, #eaf1ff, #d5e5ff);
 }
 .sender-info {
   flex: 1;
@@ -69,14 +142,15 @@
 }
 .role-tag {
   font-size: 24rpx;
-  padding: 6rpx 20rpx;
+  padding: 8rpx 22rpx;
   border-radius: 999rpx;
+  font-weight: 600;
 }
 .role-tag.me {
   background: rgba(255, 95, 126, 0.15);
   color: var(--primary-deep);
 }
 .role-tag.friend {
-  background: #f0f0f0;
-  color: var(--ink-soft);
+  background: rgba(79, 142, 247, 0.12);
+  color: #3d6fc9;
 }

@@ -1,12 +1,16 @@
-/* ============ 全局主题 ============ */
+/* ============ 全局主题 v2 ============ */
 page {
   --primary: #ff5f7e;
   --primary-deep: #e04368;
+  --primary-soft: #ff8fa6;
+  --peach: #ffb199;
   --accent: #ffb347;
-  --ink: #4a2b33;
+  --lavender: #9b7ed6;
+  --ink: #3d2129;
   --ink-soft: #96737d;
   --card: #ffffff;
-  background: linear-gradient(160deg, #ffe8ee 0%, #fff6f4 45%, #fff0e6 100%);
+  background: linear-gradient(165deg, #ffe4ec 0%, #fff6f4 42%, #fff0e6 100%);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
     "Helvetica Neue", "Microsoft YaHei", sans-serif;
@@ -22,31 +26,56 @@ page {
 /* ============ 通用组件 ============ */
 .card {
   background: var(--card);
-  border-radius: 28rpx;
+  border: 2rpx solid rgba(255, 143, 166, 0.14);
+  border-radius: 32rpx;
   padding: 32rpx;
-  box-shadow: 0 12rpx 44rpx rgba(224, 67, 104, 0.09);
+  box-shadow: 0 8rpx 24rpx rgba(224, 67, 104, 0.06),
+    0 24rpx 56rpx rgba(224, 67, 104, 0.10);
   margin-bottom: 28rpx;
   box-sizing: border-box;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #ff7a93 0%, #ff5f7e 60%, #f04a70 100%);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #ff8fa6 0%, #ff5f7e 55%, #f04a70 100%);
   color: #fff;
   border-radius: 999rpx;
   font-size: 32rpx;
   font-weight: 700;
-  padding: 24rpx 0;
+  padding: 26rpx 0;
   text-align: center;
-  box-shadow: 0 10rpx 30rpx rgba(240, 74, 112, 0.35);
+  box-shadow: 0 12rpx 32rpx rgba(240, 74, 112, 0.38);
   letter-spacing: 2rpx;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  animation: shine 3.2s ease-in-out infinite;
+}
+@keyframes shine {
+  0% { left: -60%; }
+  55% { left: 120%; }
+  100% { left: 120%; }
 }
 .btn-primary:active {
-  opacity: 0.85;
-  transform: scale(0.98);
+  transform: scale(0.97);
+  box-shadow: 0 6rpx 18rpx rgba(240, 74, 112, 0.28);
 }
 .btn-primary.disabled {
   opacity: 0.45;
   box-shadow: none;
+  animation: none;
+}
+.btn-primary.disabled::after {
+  display: none;
 }
 
 .btn-ghost {
@@ -81,9 +110,10 @@ page {
   width: 12rpx;
   height: 12rpx;
   border-radius: 50%;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary-soft), var(--primary-deep));
   margin-right: 12rpx;
   display: inline-block;
+  box-shadow: 0 0 0 6rpx rgba(255, 95, 126, 0.12);
 }
 
 .muted {
@@ -100,9 +130,11 @@ page {
   margin-bottom: 20rpx;
   width: 100%;
   box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .input-box:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 6rpx rgba(255, 95, 126, 0.10);
 }
 
 .field-label {
@@ -110,4 +142,39 @@ page {
   color: var(--ink-soft);
   margin: 20rpx 0 12rpx;
   font-weight: 600;
+}
+
+/* ============ 通用动效 ============ */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-22rpx); }
+}
+@keyframes floatSoft {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14rpx) rotate(8deg); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes bounceX {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(12rpx); }
+}
+
+.fade-up {
+  animation: fadeUp 0.45s ease both;
+}
+
+/* 渐变文字 */
+.grad-text {
+  background: linear-gradient(120deg, #ff5f7e 0%, #f04a70 45%, #ffb199 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
 }

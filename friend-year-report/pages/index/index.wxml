@@ -1,28 +1,40 @@
 <view class="page home">
   <view class="hero">
-    <view class="badge">✨ 好友年报 · 2026</view>
+    <!-- 漂浮装饰 -->
+    <view class="deco d1">📊</view>
+    <view class="deco d2">💬</view>
+    <view class="deco d3">🌙</view>
+    <view class="deco d4">✨</view>
+    <view class="deco d5">💌</view>
+
+    <view class="badge">✨ 好友年报 · {{year}}</view>
     <view class="hero-title">
       <view>把聊天记录</view>
-      <view>变成年度报告</view>
+      <view><text class="grad-text">变成年度报告</text></view>
     </view>
     <view class="hero-sub">
       <view>谁更话痨？几点最活跃？</view>
       <view>年度称号又花落谁家？</view>
     </view>
-    <view class="hero-deco">📊 💬 🌙</view>
+
+    <view class="feat-row">
+      <view class="feat-chip">⚡ 3 步生成</view>
+      <view class="feat-chip">🔒 本地分析</view>
+      <view class="feat-chip">🎁 免费使用</view>
+    </view>
   </view>
 
   <view class="mode-card" hover-class="mode-card-hover" bindtap="goImport">
-    <view class="mode-icon">📂</view>
+    <view class="mode-icon import-icon">📂</view>
     <view class="mode-body">
       <view class="mode-title">导入聊天记录</view>
-      <view class="mode-desc">粘贴或选择微信导出的聊天记录文件，生成真实数据报告</view>
+      <view class="mode-desc">上传微信导出的聊天记录，生成真实数据报告</view>
     </view>
     <view class="arrow">›</view>
   </view>
 
   <view class="mode-card" hover-class="mode-card-hover" bindtap="goQuiz">
-    <view class="mode-icon">📝</view>
+    <view class="mode-icon quiz-icon">📝</view>
     <view class="mode-body">
       <view class="mode-title">手填问答</view>
       <view class="mode-desc">没有聊天记录？回答几个问题，生成趣味版报告</view>
@@ -31,6 +43,6 @@
   </view>
 
   <view class="privacy">
-    🔒 所有分析都在手机本地完成，聊天内容不会被上传到任何服务器，请放心使用。
+    🔒 所有分析都在手机本地完成，聊天内容不会被上传到任何服务器。
   </view>
 </view>

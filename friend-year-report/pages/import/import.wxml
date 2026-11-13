@@ -1,4 +1,17 @@
 <view class="page">
+  <!-- 步骤指示器 -->
+  <view class="steps">
+    <view class="step {{step === 1 ? 'on' : 'done'}}">
+      <view class="step-num">{{step === 1 ? '1' : '✓'}}</view>
+      <view class="step-label">粘贴记录</view>
+    </view>
+    <view class="step-line {{step === 2 ? 'on' : ''}}"></view>
+    <view class="step {{step === 2 ? 'on' : ''}}">
+      <view class="step-num">2</view>
+      <view class="step-label">确认身份</view>
+    </view>
+  </view>
+
   <!-- 第一步：粘贴内容 -->
   <block wx:if="{{step === 1}}">
     <view class="card">
@@ -43,13 +56,15 @@
           data-key="{{item.key}}"
           bindtap="pickMe"
         >
-          <view class="radio">{{myKey === item.key ? '●' : '○'}}</view>
+          <view class="sender-avatar {{myKey === item.key ? 'me' : 'friend'}}">
+            {{myKey === item.key ? '👤' : '❤️'}}
+          </view>
           <view class="sender-info">
             <view class="sender-label">{{item.label}}</view>
             <view class="sender-count">{{item.count}} 条消息</view>
           </view>
           <view class="role-tag {{myKey === item.key ? 'me' : 'friend'}}">
-            {{myKey === item.key ? '👤 我' : '❤️ TA'}}
+            {{myKey === item.key ? '是我' : '是 TA'}}
           </view>
         </view>
       </view>

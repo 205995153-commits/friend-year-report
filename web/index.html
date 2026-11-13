@@ -142,7 +142,19 @@
   .bar-label { margin-top:4px; font-size:9px; color:var(--ink-soft); min-height:13px; }
   .word-cloud { display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
     gap:14px; min-height:200px; padding:14px 0; }
-  .word { color:#5b3a45; font-weight:700; line-height:1.2; }
+  .word { color:#5b3a45; font-weight:700; line-height:1.2; display:inline-block; }
+  .grad-text { background:linear-gradient(120deg,#ff5f7e 0%,#f04a70 45%,#ffb199 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent; display:inline-block; }
+  .bar.night { background:linear-gradient(180deg,#a48ae0,#7f63c9); }
+  .bar.peak { background:linear-gradient(180deg,#ffd75e,#ffb347); box-shadow:0 0 14px rgba(255,179,71,.65); }
+  .bar-crown { position:absolute; top:-24px; left:50%; transform:translateX(-50%); font-size:18px; }
+  .chart-legend { display:flex; justify-content:center; gap:18px; margin-top:14px; font-size:11px; color:#96737d; }
+  .lg-dot { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; }
+  .lg-dot.day { background:linear-gradient(180deg,#ffc2cf,#ff8fa6); }
+  .lg-dot.night { background:linear-gradient(180deg,#a48ae0,#7f63c9); }
+  .lg-dot.peak { background:linear-gradient(180deg,#ffd75e,#ffb347); }
+  .award-icon { width:52px; height:52px; border-radius:16px; display:flex; align-items:center;
+    justify-content:center; font-size:28px; margin-right:14px; flex-shrink:0; }
   .moment { display:flex; align-items:flex-start; padding:13px 0; border-bottom:1px solid #faf0f2; }
   .moment:last-child { border-bottom:none; }
   .moment-icon { font-size:26px; margin-right:14px; }
@@ -201,7 +213,7 @@
   <div id="view-home" class="view active">
     <div class="hero">
       <span class="badge">✨ 好友年报</span>
-      <div class="hero-title">把聊天记录<br>变成年度报告</div>
+      <div class="hero-title">把聊天记录<br><span class="grad-text">变成年度报告</span></div>
       <div class="hero-sub">谁更话痨？几点最活跃？<br>年度称号又花落谁家？</div>
       <div class="hero-deco">📊 💬 🌙</div>
     </div>
@@ -1137,7 +1149,7 @@ var App = (function () {
     slides.push(
       '<div class="slide cover-slide">'
       + '<span class="cover-badge">✨ 好友年报 · ' + r.year + '</span>'
-      + '<div class="cover-names">' + esc(r.meName) + ' × ' + esc(r.friendName) + '</div>'
+      + '<div class="cover-names grad-text">' + esc(r.meName) + ' × ' + esc(r.friendName) + '</div>'
       + '<div class="cover-range">' + (r.startStr ? esc(r.startStr + ' ～ ' + r.endStr) : '一篇亲手填写的友谊档案') + '</div>'
       + '<div class="cover-emoji">💌</div>'
       + '<div class="cover-hint">点击下方 › 继续翻页</div>'
@@ -1166,8 +1178,10 @@ var App = (function () {
       var bars = '';
       for (var i = 0; i < 24; i++) {
         var h = Math.max(4, Math.round(r.hours[i] / maxH * 100));
-        bars += '<div class="bar-col"><div class="bar" style="height:' + h + '%">'
-          + (r.hours[i] > 0 ? '<span class="bar-val">' + r.hours[i] + '</span>' : '')
+        var cls = 'bar' + (i >= 23 || i <= 5 ? ' night' : '') + (i === r.peakHour ? ' peak' : '');
+        var top = i === r.peakHour ? '<span class="bar-crown">👑</span>'
+          : (r.hours[i] > 0 ? '<span class="bar-val">' + r.hours[i] + '</span>' : '');
+        bars += '<div class="bar-col"><div class="' + cls + '" style="height:' + h + '%">' + top
           + '</div><span class="bar-label">' + (i % 6 === 0 ? i : '') + '</span></div>';
       }
       var nightNote = r.nightPct >= 25 ? '，认证夜猫子组合 🦉' : '';
@@ -1175,6 +1189,11 @@ var App = (function () {
         '<div class="slide">'
         + '<div class="slide-title">你们几点在线</div>'
         + '<div class="chart-bars">' + bars + '</div>'
+        + '<div class="chart-legend">'
+        + '<span><span class="lg-dot day"></span>白天</span>'
+        + '<span><span class="lg-dot night"></span>深夜(23~5点)</span>'
+        + '<span><span class="lg-dot peak"></span>峰值</span>'
+        + '</div>'
         + '<div class="verdict">🌙 深夜消息占 ' + r.nightPct + '%，高峰在 ' + r.peakHour + ':00' + nightNote + '</div>'
         + '</div>'
       );
@@ -1195,10 +1214,13 @@ var App = (function () {
     // 4 高频词 / 专属标签
     if (!r.quiz) {
       var maxN = r.words.length ? r.words[0].n : 1;
+      var WORD_COLORS = ['#FF5F7E', '#F04A70', '#FF8A5C', '#FFB347', '#B983E0', '#5C9DF0', '#4FC3A1', '#E06C8F'];
       var wordsHtml = '';
       for (var j = 0; j < r.words.length; j++) {
         var w = r.words[j];
-        wordsHtml += '<span class="word" style="font-size:' + (24 + Math.round(w.n / maxN * 30)) + 'px">' + esc(w.w) + '</span>';
+        wordsHtml += '<span class="word" style="font-size:' + (24 + Math.round(w.n / maxN * 30))
+          + 'px;color:' + WORD_COLORS[j % WORD_COLORS.length]
+          + ';transform:rotate(' + (((j * 7) % 13) - 6) + 'deg)">' + esc(w.w) + '</span>';
       }
       slides.push(
         '<div class="slide">'
@@ -1250,10 +1272,24 @@ var App = (function () {
     }
 
     // 6 年度称号
+    var AWARD_BG = {
+      '🌙': 'linear-gradient(135deg,#EAF1FF,#DCE8FF)',
+      '⚡': 'linear-gradient(135deg,#FFF3E0,#FFE7C2)',
+      '💬': 'linear-gradient(135deg,#E8F0FF,#D5E5FF)',
+      '🚀': 'linear-gradient(135deg,#FFE9EF,#FFD6E2)',
+      '😂': 'linear-gradient(135deg,#FFF0E2,#FFE3C7)',
+      '🍬': 'linear-gradient(135deg,#FFEBF0,#FFD9E4)',
+      '🎭': 'linear-gradient(135deg,#F0EBFF,#E2D9FF)',
+      '📅': 'linear-gradient(135deg,#E9F5F0,#D7EEE6)',
+      '⏱️': 'linear-gradient(135deg,#EEF2F7,#DFE7F0)',
+      '🏷️': 'linear-gradient(135deg,#FBF1E4,#F5E5CB)',
+      '🍜': 'linear-gradient(135deg,#FBEFE4,#F6DFC9)',
+    };
     var awardsHtml = '';
     for (var k = 0; k < r.awards.length; k++) {
       var a = r.awards[k];
-      awardsHtml += '<div class="award-card"><div class="award-icon">' + a.icon + '</div>'
+      awardsHtml += '<div class="award-card"><div class="award-icon" style="background:'
+        + (AWARD_BG[a.icon] || AWARD_BG['🏷️']) + '">' + a.icon + '</div>'
         + '<div><div class="award-title">' + esc(a.title) + '</div>'
         + '<div class="award-desc">' + esc(a.desc) + '</div></div></div>';
     }
